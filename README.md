@@ -73,7 +73,7 @@ DB_PASS=XXXXXXXX
 SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczrrhhpersonal:XXXXXXXX@127.0.0.1:5432/pjecz_rrhh_personal"
 
 # Google Cloud Storage
-CLOUD_STORAGE_DEPOSITO=pjecz-desarrollo
+CLOUD_STORAGE_DEPOSITO=
 
 # Host
 HOST=http://127.0.0.1:5000
