@@ -56,7 +56,7 @@ poetry install
 
 ## Configuración
 
-Crear un archivo `.env` en la raíz del proyecto con las variables, establecer sus propios SECRET_KEY, DB_PASS, CLOUD_STORAGE_DEPOSITO y SALT.
+Crear un archivo `.env` en la raíz del proyecto con las variables de entorno.
 
 ```bash
 # Flask, para SECRET_KEY use openssl rand -hex 24
@@ -64,16 +64,35 @@ FLASK_APP=orion.app
 FLASK_DEBUG=1
 SECRET_KEY=XXXXXXXX
 
-# Base de datos en Artemisa
-DB_HOST=artemisa
+# Base de datos
+DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_NAME=pjecz_rrhh_personal
 DB_USER=adminpjeczrrhhpersonal
 DB_PASS=XXXXXXXX
-SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczrrhhpersonal:XXXXXXXX@artemisa:5432/pjecz_rrhh_personal"
+SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczrrhhpersonal:XXXXXXXX@127.0.0.1:5432/pjecz_rrhh_personal"
+
+# Google Cloud Storage
+CLOUD_STORAGE_DEPOSITO=pjecz-desarrollo
+
+# Host
+HOST=http://127.0.0.1:5000
+
+# Redis
+REDIS_URL=redis://127.0.0.1:6379
+TASK_QUEUE=pjecz_orion
+
+# Salt sirve para cifrar el ID con HashID, debe ser igual en la API
+SALT=XXXXXXXX
+
+# Si esta en PRODUCTION se evita reiniciar la base de datos
+DEPLOYMENT_ENVIRONMENT=develop
+
+# Google AI Studio
+AI_STUDIO_API_KEY=
 ```
 
-Crear un archivo `.bashrc` que se ejecute al iniciar la terminal
+Crear un archivo `.bashrc` que se ejecute al iniciar la terminal.
 
 ```bash
 if [ -f ~/.bashrc ]
