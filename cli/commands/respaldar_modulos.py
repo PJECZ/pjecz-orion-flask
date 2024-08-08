@@ -31,10 +31,6 @@ def respaldar_modulos():
                 "icono",
                 "ruta",
                 "en_navegacion",
-                "en_plataforma_carina",
-                "en_plataforma_orion",
-                "en_plataforma_web",
-                "en_portal_notarias",
                 "estatus",
             ]
         )
@@ -47,10 +43,6 @@ def respaldar_modulos():
                     modulo.icono,
                     modulo.ruta,
                     int(modulo.en_navegacion),
-                    int(modulo.en_plataforma_carina),
-                    int(modulo.en_plataforma_orion),
-                    int(modulo.en_plataforma_web),
-                    int(modulo.en_portal_notarias),
                     modulo.estatus,
                 ]
             )

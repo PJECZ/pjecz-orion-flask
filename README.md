@@ -120,7 +120,6 @@ then
     echo "   DB_USER: ${DB_USER}"
     echo "   DB_PASS: ${DB_PASS}"
     echo "   DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT}"
-    echo "   ESTADO_CLAVE: ${ESTADO_CLAVE}"
     echo "   FLASK_APP: ${FLASK_APP}"
     echo "   HOST: ${HOST}"
     echo "   REDIS_URL: ${REDIS_URL}"

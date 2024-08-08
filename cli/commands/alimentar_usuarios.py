@@ -9,12 +9,10 @@ from pathlib import Path
 
 import click
 
-from orion.blueprints.autoridades.models import Autoridad
-from orion.blueprints.oficinas.models import Oficina
 from orion.blueprints.usuarios.models import Usuario
 from orion.extensions import pwd_context
 from lib.pwgen import generar_contrasena
-from lib.safe_string import safe_clave, safe_email, safe_string
+from lib.safe_string import safe_email, safe_string
 
 USUARIOS_CSV = "seed/usuarios_roles.csv"
 
@@ -34,8 +32,6 @@ def alimentar_usuarios():
         rows = csv.DictReader(puntero)
         for row in rows:
             usuario_id = int(row["usuario_id"])
-            autoridad_clave = safe_clave(row["autoridad_clave"])
-            oficina_id = int(row["oficina_id"])
             email = safe_email(row["email"])
             nombres = safe_string(row["nombres"], save_enie=True)
             apellido_paterno = safe_string(row["apellido_paterno"], save_enie=True)
@@ -46,17 +42,7 @@ def alimentar_usuarios():
             # if usuario_id != contador + 1:
             #     click.echo(click.style(f"  AVISO: usuario_id {usuario_id} no es consecutivo", fg="red"))
             #     sys.exit(1)
-            autoridad = Autoridad.query.filter_by(clave=autoridad_clave).first()
-            if autoridad is None:
-                click.echo(click.style(f"  AVISO: autoridad_clave {autoridad_clave} no existe", fg="red"))
-                sys.exit(1)
-            oficina = Oficina.query.get(oficina_id)
-            if oficina is None:
-                click.echo(click.style(f"  AVISO: oficina_id {oficina_id} no existe", fg="red"))
-                sys.exit(1)
             Usuario(
-                autoridad=autoridad,
-                oficina=oficina,
                 email=email,
                 nombres=nombres,
                 apellido_paterno=apellido_paterno,

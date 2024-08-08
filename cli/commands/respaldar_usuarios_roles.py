@@ -26,8 +26,6 @@ def respaldar_usuarios_roles():
         respaldo.writerow(
             [
                 "usuario_id",
-                "autoridad_clave",
-                "oficina_id",
                 "email",
                 "nombres",
                 "apellido_paterno",
@@ -46,8 +44,6 @@ def respaldar_usuarios_roles():
             respaldo.writerow(
                 [
                     usuario.id,
-                    usuario.autoridad.clave,
-                    usuario.oficina_id,
                     usuario.email,
                     usuario.nombres,
                     usuario.apellido_paterno,
