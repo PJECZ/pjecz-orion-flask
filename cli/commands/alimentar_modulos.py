@@ -34,10 +34,6 @@ def alimentar_modulos():
             icono = row["icono"]
             ruta = row["ruta"]
             en_navegacion = row["en_navegacion"] == "1"
-            en_plataforma_carina = row["en_plataforma_carina"] == "1"
-            en_plataforma_orion = row["en_plataforma_orion"] == "1"
-            en_plataforma_web = row["en_plataforma_web"] == "1"
-            en_portal_notarias = row["en_portal_notarias"] == "1"
             estatus = row["estatus"]
             if modulo_id != contador + 1:
                 click.echo(click.style(f"  AVISO: modulo_id {modulo_id} no es consecutivo", fg="red"))
@@ -48,10 +44,6 @@ def alimentar_modulos():
                 icono=icono,
                 ruta=ruta,
                 en_navegacion=en_navegacion,
-                en_plataforma_carina=en_plataforma_carina,
-                en_plataforma_orion=en_plataforma_orion,
-                en_plataforma_web=en_plataforma_web,
-                en_portal_notarias=en_portal_notarias,
                 estatus=estatus,
             ).save()
             contador += 1
