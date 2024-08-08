@@ -70,7 +70,7 @@ DB_PORT=5432
 DB_NAME=pjecz_rrhh_personal
 DB_USER=adminpjeczrrhhpersonal
 DB_PASS=XXXXXXXX
-SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczrrhhpersonal:XXXXXXXX@artemisa:5432/pjecz_plataforma_web"
+SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczrrhhpersonal:XXXXXXXX@artemisa:5432/pjecz_rrhh_personal"
 ```
 
 Crear un archivo `.bashrc` que se ejecute al iniciar la terminal
