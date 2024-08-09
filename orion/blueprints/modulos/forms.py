@@ -15,4 +15,5 @@ class ModuloForm(FlaskForm):
     icono = StringField("Icono", validators=[DataRequired(), Length(max=48)], default="mdi:folder")
     ruta = StringField("Ruta (comienza con /)", validators=[DataRequired(), Length(max=64)], default="/")
     en_navegacion = BooleanField("En menú de navegación", validators=[Optional()])
+    en_plataforma_orion = BooleanField("En Plataforma Orión", validators=[Optional()])
     guardar = SubmitField("Guardar")
