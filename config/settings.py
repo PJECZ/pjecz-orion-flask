@@ -33,9 +33,7 @@ from pydantic_settings import BaseSettings
 
 load_dotenv()
 
-PROJECT_ID = os.getenv(
-    "PROJECT_ID", ""
-)  # Por defecto esta vacio, esto significa estamos en modo local
+PROJECT_ID = os.getenv("PROJECT_ID", "")  # Por defecto esta vacio, esto significa estamos en modo local
 SERVICE_PREFIX = os.getenv("SERVICE_PREFIX", "pjecz_orion_flask")
 
 
