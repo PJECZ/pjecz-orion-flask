@@ -164,7 +164,7 @@ then
     echo
 fi
 
-if [ -f .github/workflows/gcloud-app-deploy.yml ]
+if [ -f .github/workflows/gcloud-app-deploy.yaml ]
 then
     echo "-- Si cambia pyproject.toml reconstruya requirements.txt para el deploy en GCP via GitHub Actions"
     echo "   poetry export -f requirements.txt --output requirements.txt --without-hashes"
