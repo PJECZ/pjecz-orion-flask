@@ -5,7 +5,6 @@ Para produccion, configure los siguientes secretos en Google Cloud Secret Manage
 
 - pjecz_orion_flask_ai_studio_api_key
 - pjecz_orion_flask_cloud_storage_deposito
-- pjecz_orion_flask_estado_clave
 - pjecz_orion_flask_host
 - pjecz_orion_flask_redis_url
 - pjecz_orion_flask_salt
@@ -16,7 +15,6 @@ Para produccion, configure los siguientes secretos en Google Cloud Secret Manage
 Para desarrollo, debe crear un archivo .env con las variables de entorno:
 
 - AI_STUDIO_API_KEY
-- ESTADO_CLAVE
 - CLOUD_STORAGE_DEPOSITO
 - HOST
 - REDIS_URL
@@ -35,7 +33,9 @@ from pydantic_settings import BaseSettings
 
 load_dotenv()
 
-PROJECT_ID = os.getenv("PROJECT_ID", "")  # Por defecto esta vacio, esto significa estamos en modo local
+PROJECT_ID = os.getenv(
+    "PROJECT_ID", ""
+)  # Por defecto esta vacio, esto significa estamos en modo local
 SERVICE_PREFIX = os.getenv("SERVICE_PREFIX", "pjecz_orion_flask")
 
 
