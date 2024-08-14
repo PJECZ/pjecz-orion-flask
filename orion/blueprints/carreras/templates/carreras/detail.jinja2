@@ -1,0 +1,34 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Carrera {{ carrera.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Carrera ' + carrera.nombre) %}
+        {{ topbar.button_previous('Carreras', url_for('carreras.list_active')) }}
+        {# if current_user.can_edit('CARRERAS') %}
+            {{ topbar.button_edit('Editar', url_for('carreras.edit', carrera_id=carrera.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('CARRERAS') %}
+            {% if carrera.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('carreras.delete', carrera_id=carrera.id)) }}{% endif %}
+            {% if carrera.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('carreras.recover', carrera_id=carrera.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=carrera.estatus) %}
+        {{ detail.label_value('Nombre', carrera.nombre) }}
+        {# detail.label_value('Creado', moment(carrera.creado, local=True).format('llll')) #}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('CARRERAS') %}
+        {% if carrera.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + carrera.nombre + '?') }}{% endif %}
+        {% if carrera.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + carrera.nombre + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}
