@@ -8,13 +8,13 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Carrera ' + carrera.nombre) %}
         {{ topbar.button_previous('Carreras', url_for('carreras.list_active')) }}
-        {# if current_user.can_edit('CARRERAS') %}
+        {% if current_user.can_edit('CARRERAS') %}
             {{ topbar.button_edit('Editar', url_for('carreras.edit', carrera_id=carrera.id)) }}
-        {% endif #}
-        {# if current_user.can_admin('CARRERAS') %}
+        {% endif %}
+        {% if current_user.can_admin('CARRERAS') %}
             {% if carrera.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('carreras.delete', carrera_id=carrera.id)) }}{% endif %}
             {% if carrera.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('carreras.recover', carrera_id=carrera.id)) }}{% endif %}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 

@@ -2,12 +2,10 @@
 Carreras, modelos
 """
 
-from datetime import datetime
-from typing import List, Optional
+from typing import List
 
-from sqlalchemy import JSON, Boolean, DateTime, Enum, ForeignKey, Integer, String, Text, Uuid
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql.functions import now
 
 from lib.universal_mixin import UniversalMixin
 from orion.extensions import database
@@ -15,11 +13,6 @@ from orion.extensions import database
 
 class Carrera(database.Model, UniversalMixin):
     """Carrera"""
-
-    ESTADOS = {
-        "PENDIENTE": "Pendiente",
-        "CANCELADO": "Cancelado",
-    }
 
     # Nombre de la tabla
     __tablename__ = "carreras"

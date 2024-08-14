@@ -10,6 +10,7 @@ from flask_login import current_user, login_required
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_message, safe_string
 from orion.blueprints.bitacoras.models import Bitacora
+from orion.blueprints.carreras.forms import CarreraForm
 from orion.blueprints.carreras.models import Carrera
 from orion.blueprints.modulos.models import Modulo
 from orion.blueprints.permisos.models import Permiso
@@ -63,7 +64,7 @@ def datatable_json():
 
 @carreras.route("/carreras")
 def list_active():
-    """Listado de Carreras activos"""
+    """Listado de Carreras activas"""
     return render_template(
         "carreras/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
@@ -75,17 +76,111 @@ def list_active():
 @carreras.route("/carreras/inactivos")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
-    """Listado de Carreras inactivos"""
+    """Listado de Carreras inactivas"""
     return render_template(
         "carreras/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
-        titulo="Carreras inactivos",
+        titulo="Carreras inactivas",
         estatus="B",
     )
 
 
 @carreras.route("/carreras/<int:carrera_id>")
 def detail(carrera_id):
-    """Detalle de un Carrera"""
+    """Detalle de una Carrera"""
     carrera = Carrera.query.get_or_404(carrera_id)
     return render_template("carreras/detail.jinja2", carrera=carrera)
+
+
+@carreras.route("/carreras/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Carrera"""
+    form = CarreraForm()
+    if form.validate_on_submit():
+        # Validar que el nombre no se repita
+        nombre = safe_string(form.nombre.data, save_enie=True)
+        if Carrera.query.filter_by(nombre=nombre).first():
+            flash("El nombre ya está en uso. Debe de ser único.", "warning")
+            return render_template("carreras/new.jinja2", form=form)
+        # Guardar
+        carrera = Carrera(nombre=nombre)
+        carrera.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Carrera {carrera.nombre}"),
+            url=url_for("carreras.detail", carrera_id=carrera.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("carreras/new.jinja2", form=form)
+
+
+@carreras.route("/carreras/edicion/<int:carrera_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(carrera_id):
+    """Editar Carrera"""
+    carrera = Carrera.query.get_or_404(carrera_id)
+    form = CarreraForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Si cambia el nombre verificar que no este en uso
+        nombre = safe_string(form.nombre.data, save_enie=True)
+        if carrera.nombre != nombre:
+            carrera_existente = Carrera.query.filter_by(nombre=nombre).first()
+            if carrera_existente and carrera_existente.id != carrera.id:
+                es_valido = False
+                flash("El nombre ya está en uso. Debe de ser único.", "warning")
+        # Si es valido actualizar
+        if es_valido:
+            carrera.nombre = safe_string(form.nombre.data)
+            carrera.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Carrera {carrera.nombre}"),
+                url=url_for("carreras.detail", carrera_id=carrera.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.nombre.data = carrera.nombre
+    return render_template("carreras/edit.jinja2", form=form, carrera=carrera)
+
+
+@carreras.route("/carreras/eliminar/<int:carrera_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(carrera_id):
+    """Eliminar Carrera"""
+    carrera = Carrera.query.get_or_404(carrera_id)
+    if carrera.estatus == "A":
+        carrera.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Carrera {carrera.nombre}"),
+            url=url_for("carreras.detail", carrera_id=carrera.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("carreras.detail", carrera_id=carrera.id))
+
+
+@carreras.route("/carreras/recuperar/<int:carrera_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(carrera_id):
+    """Recuperar Carrera"""
+    carrera = Carrera.query.get_or_404(carrera_id)
+    if carrera.estatus == "B":
+        carrera.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Carrera {carrera.nombre}"),
+            url=url_for("carreras.detail", carrera_id=carrera.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("carreras.detail", carrera_id=carrera.id))
