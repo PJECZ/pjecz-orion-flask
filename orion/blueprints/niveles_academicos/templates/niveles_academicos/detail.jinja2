@@ -1,0 +1,35 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nivel Académico {{ nivel_academico.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Nivel Académico ' + nivel_academico.nombre) %}
+        {{ topbar.button_previous('Niveles Académicos', url_for('niveles_academicos.list_active')) }}
+        {% if current_user.can_edit('NIVELES ACADEMICOS') %}
+            {{ topbar.button_edit('Editar', url_for('niveles_academicos.edit', nivel_academico_id=nivel_academico.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('NIVELES ACADEMICOS') %}
+            {% if nivel_academico.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('niveles_academicos.delete', nivel_academico_id=nivel_academico.id)) }}{% endif %}
+            {% if nivel_academico.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('niveles_academicos.recover', nivel_academico_id=nivel_academico.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=nivel_academico.estatus) %}
+        {{ detail.label_value_big('Clave', nivel_academico.clave) }}
+        {{ detail.label_value('Nombre', nivel_academico.nombre) }}
+        {# {{ detail.label_value('Creado', moment(nivel_academico.creado, local=True).format('llll')) }} #}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('NIVELES ACADEMICOS') %}
+        {% if nivel_academico.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + nivel_academico.nombre + '?') }}{% endif %}
+        {% if nivel_academico.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + nivel_academico.nombre + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}
