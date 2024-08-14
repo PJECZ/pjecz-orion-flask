@@ -99,15 +99,14 @@ class Persona(database.Model, UniversalMixin):
         Enum(*ESTADOS_CIVILES, name="personas_estados_civiles", native_enum=False), index=True
     )
     es_madre: Mapped[bool] = mapped_column(default=False)
-    nivel_estudios:
-    cedula_profesional:
-    observaciones:
-    observaciones_especiales:
-    # Domicilio Fiscal
-    # Datos Extra
-    fecha_baja:
+    # nivel_estudios:
+    # cedula_profesional:
+    # observaciones:
+    # observaciones_especiales:
+    # # Domicilio Fiscal
+    # # Datos Extra
+    # fecha_baja:
     falta_papeleria: Mapped[bool] = mapped_column(default=False)
-
 
     estado: Mapped[str] = mapped_column(Enum(*ESTADOS, name="personas_estados", native_enum=False), index=True)
 
