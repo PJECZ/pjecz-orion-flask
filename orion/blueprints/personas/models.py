@@ -78,8 +78,8 @@ class Persona(database.Model, UniversalMixin):
     # Claves foráneas
     # ciudad_nacimiento_id = db.Column(db.Integer, db.ForeignKey("cat_ciudades.id"))
     # ciudad_nacimiento = db.relationship("CatCiudad", back_populates="personas")
-    # carrera_id = db.Column(db.Integer, db.ForeignKey("carreras.id"), index=True)
-    # carrera = db.relationship("Carrera", back_populates="personas")
+    carrera_id: Mapped[int] = mapped_column(ForeignKey("carreras.id"))
+    carrera: Mapped["Carrera"] = relationship(back_populates="personas")
     # nivel_estudios_max_id = db.Column(db.Integer, db.ForeignKey("niveles_academicos.id"), index=True)
     # nivel_estudios_max = db.relationship("NivelAcademico", back_populates="personas")
 
