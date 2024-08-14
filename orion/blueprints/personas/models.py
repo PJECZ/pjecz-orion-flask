@@ -108,8 +108,6 @@ class Persona(database.Model, UniversalMixin):
     # fecha_baja:
     falta_papeleria: Mapped[bool] = mapped_column(default=False)
 
-    estado: Mapped[str] = mapped_column(Enum(*ESTADOS, name="personas_estados", native_enum=False), index=True)
-
     def __repr__(self):
         """Representación"""
         return f"<Persona {self.id}>"
