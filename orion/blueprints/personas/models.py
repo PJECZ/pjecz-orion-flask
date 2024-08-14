@@ -2,10 +2,10 @@
 Personas, modelos
 """
 
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import List, Optional
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, JSON, Integer, String, Text, Uuid, Date
+from sqlalchemy import JSON, Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import now
 
@@ -75,38 +75,83 @@ class Persona(database.Model, UniversalMixin):
     # Clave primaria
     id: Mapped[int] = mapped_column(primary_key=True)
 
+    # Claves foráneas
+    # ciudad_nacimiento_id = db.Column(db.Integer, db.ForeignKey("cat_ciudades.id"))
+    # ciudad_nacimiento = db.relationship("CatCiudad", back_populates="personas")
+    # carrera_id = db.Column(db.Integer, db.ForeignKey("carreras.id"), index=True)
+    # carrera = db.relationship("Carrera", back_populates="personas")
+    # nivel_estudios_max_id = db.Column(db.Integer, db.ForeignKey("niveles_academicos.id"), index=True)
+    # nivel_estudios_max = db.relationship("NivelAcademico", back_populates="personas")
+
     # Columnas
-    nombres: Mapped[str] = mapped_column(String(16), unique=True)
+    nombres: Mapped[str] = mapped_column(String(128))
     apellido_primero: Mapped[str] = mapped_column(String(128))
     apellido_segundo: Mapped[Optional[str]] = mapped_column(String(128))
-    numero_empleado: Mapped[int] = mapped_column(unique=True)
+    numero_empleado: Mapped[Optional[int]] = mapped_column(unique=True)
     numero_empleado_temporal: Mapped[bool] = mapped_column(default=False)
     rfc: Mapped[str] = mapped_column(String(13))
     curp: Mapped[str] = mapped_column(String(18), unique=True)
-    email: Mapped[str] = mapped_column(String(64))
-    email_secundario: Mapped[str] = mapped_column(String(64))
-    telefono_personal: Mapped[str] = mapped_column(String(32))
-    telefono_domicilio: Mapped[str] = mapped_column(String(16))
-    telefono_trabajo: Mapped[str] = mapped_column(String(64))
-    telefono_trabajo_extension: Mapped[str] = mapped_column(String(16))
+    email: Mapped[Optional[str]] = mapped_column(String(64))
+    email_secundario: Mapped[Optional[str]] = mapped_column(String(64))
+    telefono_personal: Mapped[Optional[str]] = mapped_column(String(32))
+    telefono_domicilio: Mapped[Optional[str]] = mapped_column(String(16))
+    telefono_trabajo: Mapped[Optional[str]] = mapped_column(String(64))
+    telefono_trabajo_extension: Mapped[Optional[str]] = mapped_column(String(16))
     fecha_ingreso_gobierno: Mapped[date]
     fecha_ingreso_pj: Mapped[date]
     fecha_nacimiento: Mapped[date]
-    num_seguridad_social: Mapped[str] = mapped_column(String(16))
-    situacion = Mapped[str] = mapped_column(Enum(*SITUACIONES, name="personas_situaciones", native_enum=False), index=True)
-    sexo = Mapped[str] = mapped_column(Enum(*SEXOS, name="personas_sexos", native_enum=False), index=True)
-    estado_civil = Mapped[str] = mapped_column(
+    num_seguridad_social: Mapped[Optional[str]] = mapped_column(String(16))
+    situacion: Mapped[str] = mapped_column(Enum(*SITUACIONES, name="personas_situaciones", native_enum=False), index=True)
+    sexo: Mapped[str] = mapped_column(Enum(*SEXOS, name="personas_sexos", native_enum=False), index=True)
+    estado_civil: Mapped[str] = mapped_column(
         Enum(*ESTADOS_CIVILES, name="personas_estados_civiles", native_enum=False), index=True
     )
-    es_madre: Mapped[bool] = mapped_column(default=False)
-    # nivel_estudios:
-    # cedula_profesional:
-    # observaciones:
-    # observaciones_especiales:
-    # # Domicilio Fiscal
-    # # Datos Extra
-    # fecha_baja:
+    madre: Mapped[bool] = mapped_column(default=False)  # TODO: Cmabiar a es_madre
+    # nivel_estudios = db.Column(db.Enum(*OrderedDict(ESTUDIOS), name="nivel_estudios", native_enum=False), index=False, nullable=True)
+    # cedula_profesional = db.Column(db.String(16))
+    # observaciones = db.Column(db.String(512))
+    # observaciones_especiales = db.Column(db.String(512))
+
+    # Domicilio Fiscal
+    # domicilio_fiscal_calle = db.Column(db.String(128))
+    # domicilio_fiscal_numero_exterior = db.Column(db.String(16))
+    # domicilio_fiscal_numero_interior = db.Column(db.String(16))
+    # domicilio_fiscal_colonia = db.Column(db.String(64))
+    # domicilio_fiscal_localidad = db.Column(db.String(64))
+    # domicilio_fiscal_municipio = db.Column(db.String(64))
+    # domicilio_fiscal_estado = db.Column(db.String(64))
+    # domicilio_fiscal_cp = db.Column(db.Integer)
+
+    # Datos Extra
+    # fecha_baja = db.Column(db.Date)
     falta_papeleria: Mapped[bool] = mapped_column(default=False)
+
+    # Hijos
+    # fotografias = db.relationship("PersonaFotografia", back_populates="persona")
+    # sistemas = db.relationship("SistemaPersona", back_populates="persona")
+    # cursos = db.relationship("PersonaCurso", back_populates="persona")
+    # familiares = db.relationship("PersonaFamiliar", back_populates="persona")
+    # personas_domicilios = db.relationship("PersonaDomicilio", back_populates="persona")
+    # personas_enfermedades = db.relationship("PersonaEnfermedad", back_populates="persona")
+    # historial_puestos = db.relationship("HistorialPuesto", back_populates="persona")
+    # historial_academicos = db.relationship("HistorialAcademico", back_populates="persona")
+    # historial_laborales = db.relationship("HistorialLaboral", back_populates="persona")
+    # licencias = db.relationship("Licencia", back_populates="persona")
+    # incapacidades = db.relationship("Incapacidad", back_populates="persona")
+    # parentescos = db.relationship("PersonaFamiliarPJ", foreign_keys="PersonaFamiliarPJ.persona_id")
+    # parientes = db.relationship("PersonaFamiliarPJ", foreign_keys="PersonaFamiliarPJ.pariente_id")
+    # pensiones_alimenticias = db.relationship("PersonaPensionAlimenticia", back_populates="persona")
+    # personas_meritos = db.relationship("PersonaMerito", back_populates="persona")
+    # personas_actas_administrativas = db.relationship("PersonaActaAdministrativa", back_populates="persona")
+    # personas_procedimientos_diciplinarios = db.relationship("PersonaProcedimientoDiciplinario", back_populates="persona")
+    # personas_escalafones = db.relationship("PersonaEscalafon", back_populates="persona")
+    # adjuntos = db.relationship("PersonaAdjunto", back_populates="persona")
+    # nombramientos = db.relationship("PersonaNombramiento", back_populates="persona")
+
+    @property
+    def nombre_completo(self):
+        """Junta nombres, apellido primero y apellido segundo"""
+        return self.nombres + " " + self.apellido_primero + " " + self.apellido_segundo
 
     def __repr__(self):
         """Representación"""

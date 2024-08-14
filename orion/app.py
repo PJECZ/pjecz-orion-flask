@@ -11,6 +11,7 @@ from orion.blueprints.bitacoras.views import bitacoras
 from orion.blueprints.entradas_salidas.views import entradas_salidas
 from orion.blueprints.modulos.views import modulos
 from orion.blueprints.permisos.views import permisos
+from orion.blueprints.personas.views import personas
 from orion.blueprints.roles.views import roles
 from orion.blueprints.sistemas.views import sistemas
 from orion.blueprints.tareas.views import tareas
@@ -37,6 +38,7 @@ def create_app():
     app.register_blueprint(entradas_salidas)
     app.register_blueprint(modulos)
     app.register_blueprint(permisos)
+    app.register_blueprint(personas)
     app.register_blueprint(roles)
     app.register_blueprint(sistemas)
     app.register_blueprint(tareas)
