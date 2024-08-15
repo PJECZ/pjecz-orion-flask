@@ -7,6 +7,7 @@ from flask import Flask
 from redis import Redis
 
 from config.settings import Settings
+from orion.blueprints.areas.views import areas
 from orion.blueprints.bitacoras.views import bitacoras
 from orion.blueprints.carreras.views import carreras
 from orion.blueprints.entradas_salidas.views import entradas_salidas
@@ -36,6 +37,7 @@ def create_app():
     app.task_queue = rq.Queue(app.config["TASK_QUEUE"], connection=app.redis, default_timeout=3000)
 
     # Registrar blueprints
+    app.register_blueprint(areas)
     app.register_blueprint(bitacoras)
     app.register_blueprint(carreras)
     app.register_blueprint(entradas_salidas)

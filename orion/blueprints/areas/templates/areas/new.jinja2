@@ -1,0 +1,22 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nueva Área{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Nueva Área') %}
+        {{ topbar.button_cancel() }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% call f.form_tag('areas.new', fid='area_form') %}
+            {% call f.form_group(form.nombre) %}{% endcall %}
+            {% call f.form_group(form.centro_trabajo) %}{% endcall %}
+            <div><p>FALTA centro de trabajo con Select2</p></div>
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
