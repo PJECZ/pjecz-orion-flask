@@ -63,6 +63,7 @@ def datatable_json():
                     "url": url_for("personas.detail", persona_id=resultado.id),
                 },
                 "situacion": resultado.situacion,
+                "sexo": "HOMBRE" if resultado.sexo == "H" else "MUJER",
             }
         )
     # Entregar JSON
