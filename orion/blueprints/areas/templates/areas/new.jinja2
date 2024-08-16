@@ -4,6 +4,12 @@
 
 {% block title %}Nueva Área{% endblock %}
 
+{% block custom_head %}
+    <!-- Select2 bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://storage.googleapis.com/pjecz-informatica/static/css/select2.css" rel="stylesheet" />
+{% endblock %}
+
 {% block topbar_actions %}
     {% call topbar.page_buttons('Nueva Área') %}
         {{ topbar.button_cancel() }}
@@ -15,8 +21,32 @@
         {% call f.form_tag('areas.new', fid='area_form') %}
             {% call f.form_group(form.nombre) %}{% endcall %}
             {% call f.form_group(form.centro_trabajo) %}{% endcall %}
-            <div><p>FALTA centro de trabajo con Select2</p></div>
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Select2 bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $("#centro_trabajo").select2({
+                // --- Carga de registros por Ajax --- //
+                ajax: {
+                    url: '/centros_trabajos/query_centros_trabajos_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'clave_nombre': params.term.toUpperCase() };
+                    }
+                },
+                placeholder: "",
+                minimumInputLength: 3,
+                allowClear: true
+            });
+        });
+    </script>
 {% endblock %}

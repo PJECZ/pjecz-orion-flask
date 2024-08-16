@@ -25,7 +25,7 @@ class Organo(database.Model, UniversalMixin):
     nombre: Mapped[str] = mapped_column(String(64))
 
     # Hijos
-    # centros_trabajos = db.relationship("CentroTrabajo", back_populates="organo")
+    centros_trabajos: Mapped[List["CentroTrabajo"]] = relationship(back_populates="organo")
 
     @property
     def nombre_descriptivo(self):

@@ -21,7 +21,11 @@
 {% block content %}
     {% call detail.card(estatus=area.estatus) %}
         {{ detail.label_value('Nombre del área', area.nombre) }}
-        {{ detail.label_value('Centro de Trabajo', 'FALTA', '#') }}<!-- TODO: Nombre del Centro de Trabajo con URL -->
+        {% if current_user.can_view('CENTROS TRABAJOS') %}
+            {{ detail.label_value('Centro de Trabajo', area.centro_trabajo.clave_nombre, url_for('centros_trabajos.detail', centro_trabajo_id=area.centro_trabajo.id)) }}
+        {% else %}
+            {{ detail.label_value('Centro de Trabajo', area.centro_trabajo.clave_nombre) }}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
