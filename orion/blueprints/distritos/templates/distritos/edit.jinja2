@@ -5,9 +5,7 @@
 {% block title %}Editar Distrito {{ distrito.clave }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Editar ' + distrito.clave) %}
-        {{ topbar.button_cancel() }}
-    {% endcall %}
+    {{ topbar.page('Editar ' + distrito.clave) }}
 {% endblock %}
 
 {% block content %}
