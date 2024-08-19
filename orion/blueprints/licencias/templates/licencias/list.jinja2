@@ -1,0 +1,108 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_admin('LICENCIAS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('licencias.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('licencias.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('LICENCIAS') %}
+            {# {{ topbar.button_new('Nuevo Licencia', url_for('licencias.new')) }} #}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros licencias -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosLicencias.buscar(); return false;">
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroFechaInicio" type="date" class="form-control" aria-label="Fecha Inicio">
+                            <label for="filtroFechaInicio">Fecha de Inicio</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroFechaTermino" type="date" class="form-control" aria-label="Fecha Termino">
+                            <label for="filtroFechaTermino">Fecha de Término</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            {# <input id="filtroTipo" type="text" class="form-control" aria-label="Tipo"> #}
+                            <select id="filtroTipo" class="form-control" aria-label="Tipo" onchange="filtrosLicencias.buscar(); return false;" style="flex: inherit;">
+                                <option selected value=""></option>
+                                {% for tipo in tipos %}
+                                    <option value="{{tipo}}">{{tipo}}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="filtroTipo">Tipos</label>
+                        </div>
+                    </div>
+                    <div class="col-8">
+                        <div class="form-floating">
+                            <input id="filtroPersonaNombre" type="text" class="form-control" aria-label="Nombre Persona" style="text-transform: uppercase;">
+                            <label for="filtroPersonaNombre">Nombre de la Persona</label>
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosLicencias.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosLicencias.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable licencias -->
+        <table id="licencias_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Periodo</th>
+                    <th>Tipo</th>
+                    <th>Días</th>
+                    <th>Persona</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable licencias
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDataTable = constructorDataTable.config();
+        configDataTable['ajax']['url'] = '/licencias/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: 'detalle' },
+            { data: 'tipo' },
+            { data: 'dias' },
+            { data: 'persona' }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.periodo + '</a>';
+                }
+            }
+        ];
+        // Filtros licencias
+        const filtrosLicencias = new FiltrosDataTable('#licencias_datatable', configDataTable);
+        filtrosLicencias.agregarInput('filtroFechaInicio', 'fecha_inicio');
+        filtrosLicencias.agregarInput('filtroFechaTermino', 'fecha_termino');
+        filtrosLicencias.agregarInput('filtroTipo', 'tipo');
+        filtrosLicencias.agregarInput('filtroPersonaNombre', 'persona_nombre_completo');
+        filtrosLicencias.precargar();
+    </script>
+{% endblock %}
