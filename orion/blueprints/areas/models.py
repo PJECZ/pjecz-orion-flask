@@ -21,8 +21,8 @@ class Area(database.Model, UniversalMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     # Clave foránea
-    # centro_trabajo_id = db.Column(db.Integer, db.ForeignKey("centros_trabajos.id"), index=True, nullable=True)
-    # centro_trabajo = db.relationship("CentroTrabajo", back_populates="areas")
+    centro_trabajo_id: Mapped[int] = mapped_column(ForeignKey("centros_trabajos.id"))
+    centro_trabajo: Mapped["CentroTrabajo"] = relationship(back_populates="areas")
 
     # Columnas
     nombre: Mapped[str] = mapped_column(String(128), unique=True)

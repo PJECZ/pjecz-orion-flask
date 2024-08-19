@@ -61,8 +61,8 @@ def datatable_json():
                     "url": url_for("areas.detail", area_id=resultado.id),
                 },
                 "centro_trabajo": {
-                    "nombre": "FALTA",
-                    "url": "#",
+                    "nombre": resultado.centro_trabajo.clave_nombre,
+                    "url": url_for("centros_trabajos.detail", centro_trabajo_id=resultado.centro_trabajo.id),
                 },
             }
         )
@@ -114,7 +114,7 @@ def new():
         # Guardar
         area = Area(
             nombre=nombre,
-            # centro_trabajo=form.centro_trabajo.data,
+            centro_trabajo_id=form.centro_trabajo.data,
         )
         area.save()
         bitacora = Bitacora(
@@ -147,7 +147,7 @@ def edit(area_id):
         # Si es valido actualizar
         if es_valido:
             area.nombre = nombre
-            # area.centro_trabajo = safe_string(form.centro_trabajo.data)
+            area.centro_trabajo_id = form.centro_trabajo.data
             area.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),

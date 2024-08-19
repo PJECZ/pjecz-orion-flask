@@ -1,0 +1,39 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Órgano {{ organo.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Órgano ' + organo.clave) %}
+        {{ topbar.button_previous('Órganos', url_for('organos.list_active')) }}
+        {% if current_user.can_edit('ORGANOS') %}
+            {{ topbar.button_edit('Editar', url_for('organos.edit', organo_id=organo.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('ORGANOS') %}
+            {% if organo.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('organos.delete', organo_id=organo.id)) }}{% endif %}
+            {% if organo.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('organos.recover', organo_id=organo.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=organo.estatus) %}
+        {{ detail.label_value_big('Clave', organo.clave) }}
+        {{ detail.label_value('Nombre', organo.nombre) }}
+        {# {{ detail.label_value('Creado', moment(organo.creado, local=True).format('llll')) }} #}
+    {% endcall %}
+    <!-- Centro de Trabajo -->
+    {% call detail.card("Centros de Trabajo") %}
+    <p>FALTA Listado de Centro de Trabajo filtrado por Órganos</p>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('ORGANOS') %}
+        {% if organo.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + organo.clave + '?') }}{% endif %}
+        {% if organo.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + organo.clave + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}
