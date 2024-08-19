@@ -5,9 +5,7 @@
 {% block title %}Editar Carrera {{ carrera.nombre }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Editar ' + carrera.nombre) %}
-        {{ topbar.button_cancel() }}
-    {% endcall %}
+    {{ topbar.page('Editar ' + carrera.nombre) }}
 {% endblock %}
 
 {% block content %}
