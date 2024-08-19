@@ -50,6 +50,8 @@ def datatable_json():
             consulta = consulta.filter(CentroTrabajo.nombre.contains(nombre))
     if "distrito_id" in request.form:
         consulta = consulta.filter_by(distrito_id=request.form["distrito_id"])
+    if "organo_id" in request.form:
+        consulta = consulta.filter_by(organo_id=request.form["organo_id"])
     # Luego filtrar por columnas de otras tablas
     # if "persona_rfc" in request.form:
     #     consulta = consulta.join(Persona)
