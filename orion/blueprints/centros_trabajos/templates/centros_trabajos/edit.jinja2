@@ -1,0 +1,88 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Centro de Trabajo {{ centro_trabajo.clave }}{% endblock %}
+
+{% block custom_head %}
+    <!-- Select2 bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://storage.googleapis.com/pjecz-informatica/static/css/select2.css" rel="stylesheet" />
+{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Editar ' + centro_trabajo.clave) %}
+        {{ topbar.button_cancel() }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'centro_trabajo_id': centro_trabajo.id} %}
+        {% call f.form_tag('centros_trabajos.edit', fid='centro_trabajo_form', **form_kwargs) %}
+            {% call f.form_group(form.clave) %}{% endcall %}
+            {% call f.form_group(form.nombre) %}{% endcall %}
+            {% call f.form_group(form.distrito) %}{% endcall %}
+            {% call f.form_group(form.organo) %}{% endcall %}
+            {% call f.form_group(form.telefono) %}{% endcall %}
+            {% call f.form_group(form.num_ext) %}{% endcall %}
+            {% call f.form_group(form.activo) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Select2 bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Select2 para Distritos -->
+    <script>
+        $(document).ready(function(){
+            // --- Carga de la opción elegida --- //
+            const newDistritoOption = new Option('{{centro_trabajo.distrito.nombre_descriptivo}}', '{{centro_trabajo.distrito.id}}', false, false);
+            $('#distrito').append(newDistritoOption).trigger('change');
+
+            $("#distrito").select2({
+                // --- Carga de registros por Ajax --- //
+                ajax: {
+                    url: '/distritos/query_distritos_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'clave_nombre': params.term.toUpperCase() };
+                    }
+                },
+                placeholder: "",
+                minimumInputLength: 3,
+                allowClear: true
+            });
+        });
+    </script>
+    <!-- Select2 para Órganos -->
+    <script>
+        $(document).ready(function(){
+            // --- Carga de la opción elegida --- //
+            const newOrganoOption = new Option('{{centro_trabajo.organo.nombre_descriptivo}}', '{{centro_trabajo.organo.id}}', false, false);
+            $('#organo').append(newOrganoOption).trigger('change');
+
+            $("#organo").select2({
+                // --- Carga de registros por Ajax --- //
+                ajax: {
+                    url: '/organos/query_organos_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'clave_nombre': params.term.toUpperCase() };
+                    }
+                },
+                placeholder: "",
+                minimumInputLength: 3,
+                allowClear: true
+            });
+        });
+    </script>
+{% endblock %}
