@@ -94,8 +94,14 @@ def list_inactive():
 def detail(distrito_id):
     """Detalle de un Distrito"""
     distrito = Distrito.query.get_or_404(distrito_id)
-    filtros_personas = json.dumps({"estatus": "A"})
-    return render_template("distritos/detail.jinja2", distrito=distrito, filtros_personas=filtros_personas)
+    filtros_centros_trabajos = json.dumps({"estatus": "A", "distrito_id": distrito.id})
+    filtros_personas = json.dumps({"estatus": "A", "distrito_id": distrito.id})
+    return render_template(
+        "distritos/detail.jinja2",
+        distrito=distrito,
+        filtros_centros_trabajos=filtros_centros_trabajos,
+        filtros_personas=filtros_personas,
+    )
 
 
 @distritos.route("/distritos/nuevo", methods=["GET", "POST"])

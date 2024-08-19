@@ -48,6 +48,8 @@ def datatable_json():
         nombre = safe_string(request.form["nombre"])
         if nombre != "":
             consulta = consulta.filter(CentroTrabajo.nombre.contains(nombre))
+    if "distrito_id" in request.form:
+        consulta = consulta.filter_by(distrito_id=request.form["distrito_id"])
     # Luego filtrar por columnas de otras tablas
     # if "persona_rfc" in request.form:
     #     consulta = consulta.join(Persona)
