@@ -1,0 +1,48 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Licencia {{ licencia.persona.nombre_completo }}{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar ' + licencia.persona.nombre_completo) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'licencia_id': licencia.id} %}
+        {% call f.form_tag('licencias.edit', fid='licencia_form', **form_kwargs) %}
+            {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.tipo) %}{% endcall %}
+            {% call f.form_group(form.fecha_inicio) %}{% endcall %}
+            {% call f.form_group(form.fecha_termino) %}{% endcall %}
+            {% call f.form_group(form.dias, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.con_goce) %}{% endcall %}
+            {% call f.form_group(form.motivo) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+
+{% block custom_javascript %}
+    <script>
+        function calcular_dias() {
+            const fecha_inicio = document.getElementById("fecha_inicio").value;
+            const fecha_termino = document.getElementById("fecha_termino").value;
+            const dias = document.getElementById("dias");
+            if (fecha_inicio == "" || fecha_termino == "" ) {
+                dias.value = 0;
+            } else {
+                const fecha_inicio = new Date(document.getElementById("fecha_inicio").value);
+                const fecha_termino = new Date(document.getElementById("fecha_termino").value);
+                
+                let diferenciaMilisegundos = fecha_termino - fecha_inicio;
+                dias.value = diferenciaMilisegundos / (1000 * 60 * 60 * 24) + 1;
+            }
+        }
+        document.getElementById("fecha_inicio").onchange = calcular_dias;
+        document.getElementById("fecha_termino").onchange = calcular_dias;
+        calcular_dias();
+    </script>
+{% endblock %}

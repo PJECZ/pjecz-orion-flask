@@ -11,7 +11,7 @@
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('licencias.list_active')) }}{% endif %}
         {% endif %}
         {% if current_user.can_insert('LICENCIAS') %}
-            {# {{ topbar.button_new('Nuevo Licencia', url_for('licencias.new')) }} #}
+            {{ topbar.button_new('Nueva Licencia', url_for('licencias.new')) }}
         {% endif %}
     {% endcall %}
 {% endblock %}

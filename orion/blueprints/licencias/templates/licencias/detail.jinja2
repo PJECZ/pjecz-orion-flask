@@ -1,0 +1,42 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Licencia{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Licencia') %}
+        {{ topbar.button_previous('Licencias', url_for('licencias.list_active')) }}
+        {% if current_user.can_edit('LICENCIAS') %}
+            {{ topbar.button_edit('Editar', url_for('licencias.edit', licencia_id=licencia.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('LICENCIAS') %}
+            {% if licencia.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('licencias.delete', licencia_id=licencia.id)) }}{% endif %}
+            {% if licencia.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('licencias.recover', licencia_id=licencia.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=licencia.estatus) %}
+        {% if current_user.can_view('PERSONAS') %}
+            {{ detail.label_value('Persona', licencia.persona.nombre_completo, url_for('personas.detail', persona_id=licencia.persona.id)) }}
+        {% else %}
+            {{ detail.label_value('Persona', licencia.persona.nombre_completo) }}
+        {% endif %}
+        {{ detail.label_value('Tipo', licencia.tipo) }}
+        {{ detail.label_value_boolean('Con Goce', licencia.con_goce) }}
+        {{ detail.label_value('Período', licencia.fecha_inicio.strftime("%Y/%m/%d") + ' — ' + licencia.fecha_termino.strftime("%Y/%m/%d")) }}
+        {{ detail.label_value('Días', (licencia.fecha_termino - licencia.fecha_inicio).days + 1) }}
+        {{ detail.label_value('Motivo', licencia.motivo) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('LICENCIAS') %}
+        {% if licencia.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar licencia?') }}{% endif %}
+        {% if licencia.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar licencia?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}
