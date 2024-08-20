@@ -95,6 +95,13 @@
                 render: function(data, type, row, meta) {
                     return '<a href="' + data.url + '">' + data.periodo + '</a>';
                 }
+            },
+            {
+                targets: 3, // persona
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                }
             }
         ];
         // Filtros licencias

@@ -77,7 +77,10 @@ def datatable_json():
                 },
                 "tipo": resultado.tipo,
                 "dias": f"{(resultado.fecha_termino - resultado.fecha_inicio).days + 1} DÍAS",
-                "persona": resultado.persona.nombre_completo,
+                "persona": {
+                    "nombre": resultado.persona.nombre_completo,
+                    "url": url_for("personas.detail", persona_id=resultado.persona.id),
+                },
             }
         )
     # Entregar JSON
