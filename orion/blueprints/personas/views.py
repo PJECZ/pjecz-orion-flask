@@ -6,6 +6,7 @@ import json
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_message, safe_string
@@ -98,3 +99,30 @@ def detail(persona_id):
     """Detalle de un Persona"""
     persona = Persona.query.get_or_404(persona_id)
     return render_template("personas/detail.jinja2", persona=persona)
+
+
+@personas.route("/personas/query_personas_json", methods=["POST"])
+def query_personas_json():
+    """Proporcionar el JSON de Persona para elegir en un Select2"""
+    consulta = Persona.query.filter_by(estatus="A")
+    if "nombre_completo" in request.form:
+        nombre_completo = safe_string(request.form["nombre_completo"]).upper()
+        if nombre_completo != "":
+            palabras = nombre_completo.split()
+            for palabra in palabras:
+                consulta = consulta.filter(
+                    or_(
+                        Persona.nombres.contains(palabra),
+                        Persona.apellido_primero.contains(palabra),
+                        Persona.apellido_segundo.contains(palabra),
+                    )
+                )
+    results = []
+    for persona in consulta.order_by(Persona.id).limit(15).all():
+        results.append(
+            {
+                "id": persona.id,
+                "text": persona.nombre_completo,
+            }
+        )
+    return {"results": results, "pagination": {"more": False}}

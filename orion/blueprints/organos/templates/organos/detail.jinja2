@@ -24,10 +24,43 @@
         {{ detail.label_value('Nombre', organo.nombre) }}
         {# {{ detail.label_value('Creado', moment(organo.creado, local=True).format('llll')) }} #}
     {% endcall %}
-    <!-- Centro de Trabajo -->
-    {% call detail.card("Centros de Trabajo") %}
-    <p>FALTA Listado de Centro de Trabajo filtrado por Órganos</p>
+    <!-- card Centros de Trabajo -->
+    {% if current_user.can_view('CENTROS TRABAJOS') %}
+    {% call detail.card('Centros de Trabajos') %}
+        <!-- Filtros Centro de Trabajo -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosCentrosTrabajos.buscar(); return false;">
+                    <div class="col-5">
+                        <div class="form-floating">
+                            <input id="filtroClave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
+                            <label for="filtroClave">Clave</label>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="form-floating">
+                            <input id="filtroNombre" type="text" class="form-control" aria-label="Nombre" style="text-transform: uppercase;">
+                            <label for="filtroNombre">Nombre</label>
+                        </div>
+                    </div>
+                    <div class="col-2 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosCentrosTrabajos.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosCentrosTrabajos.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable Centro de Trabajo -->
+        <table id="centros_trabajos_datatable" class="table display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Clave</th>
+                    <th>Nombre</th>
+                </tr>
+            </thead>
+        </table>
     {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
@@ -36,4 +69,33 @@
         {% if organo.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + organo.clave + '?') }}{% endif %}
     {% endif %}
     {{ detail.moment_js(moment) }}
+    {% if current_user.can_view('CENTROS TRABAJOS') %}
+        <script src="/static/js/datatables-constructor.js"></script>
+        <script src="/static/js/datatables-filtros.js"></script>
+        <script>
+            // DataTable CentrosTrabajos
+            const constructorDTCentrosTrabajos = new ConfigDataTable( '{{ csrf_token() }}' );
+            let configDTCentrosTrabajos = constructorDTCentrosTrabajos.config();
+            configDTCentrosTrabajos['ajax']['url'] = '/centros_trabajos/datatable_json';
+            configDTCentrosTrabajos['ajax']['data'] = {"estatus": "A", "organo_id": {{organo.id}}};
+            configDTCentrosTrabajos['columns'] = [
+                { data: 'detalle' },
+                { data: 'nombre' }
+            ];
+            configDTCentrosTrabajos['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
+                }
+            ];
+            // Filtros CentrosTrabajos
+            const filtrosCentrosTrabajos = new FiltrosDataTable('#centros_trabajos_datatable', configDTCentrosTrabajos);
+            filtrosCentrosTrabajos.agregarInput('filtroClave', 'clave');
+            filtrosCentrosTrabajos.agregarInput('filtroNombre', 'nombre');
+            filtrosCentrosTrabajos.precargar();
+        </script>
+    {% endif %}
 {% endblock %}

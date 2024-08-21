@@ -5,12 +5,14 @@
 import json
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_string, safe_message
 
 from orion.blueprints.areas.forms import AreaForm
 from orion.blueprints.bitacoras.models import Bitacora
+from orion.blueprints.centros_trabajos.models import CentroTrabajo
 from orion.blueprints.modulos.models import Modulo
 from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.usuarios.decorators import permission_required
@@ -45,9 +47,13 @@ def datatable_json():
         if nombre != "":
             consulta = consulta.filter(Area.nombre.contains(nombre))
     # Luego filtrar por columnas de otras tablas
-    # if "persona_rfc" in request.form:
-    #     consulta = consulta.join(Persona)
-    #     consulta = consulta.filter(Persona.rfc.contains(safe_rfc(request.form["persona_rfc"], search_fragment=True)))
+    if "centro_trabajo" in request.form:
+        centro_trabajo = safe_string(request.form["centro_trabajo"])
+        if centro_trabajo != "":
+            consulta = consulta.join(CentroTrabajo)
+            consulta = consulta.filter(
+                or_(CentroTrabajo.clave.contains(centro_trabajo), CentroTrabajo.nombre.contains(centro_trabajo))
+            )
     # Ordenar y paginar
     registros = consulta.order_by(Area.nombre).offset(start).limit(rows_per_page).all()
     total = consulta.count()

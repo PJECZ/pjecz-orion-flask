@@ -11,6 +11,7 @@ from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_string, safe_message
 
 from orion.blueprints.bitacoras.models import Bitacora
+from orion.blueprints.centros_trabajos.forms import CentroTrabajoForm
 from orion.blueprints.modulos.models import Modulo
 from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.usuarios.decorators import permission_required
@@ -48,6 +49,10 @@ def datatable_json():
         nombre = safe_string(request.form["nombre"])
         if nombre != "":
             consulta = consulta.filter(CentroTrabajo.nombre.contains(nombre))
+    if "distrito_id" in request.form:
+        consulta = consulta.filter_by(distrito_id=request.form["distrito_id"])
+    if "organo_id" in request.form:
+        consulta = consulta.filter_by(organo_id=request.form["organo_id"])
     # Luego filtrar por columnas de otras tablas
     # if "persona_rfc" in request.form:
     #     consulta = consulta.join(Persona)
@@ -101,13 +106,118 @@ def detail(centro_trabajo_id):
     return render_template("centros_trabajos/detail.jinja2", centro_trabajo=centro_trabajo)
 
 
-# NEW
+@centros_trabajos.route("/centros_trabajos/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Centro de Trabajo"""
+    form = CentroTrabajoForm()
+    if form.validate_on_submit():
+        # Validar que la clave no se repita
+        clave = safe_string(form.clave.data, save_enie=True)
+        if CentroTrabajo.query.filter_by(clave=clave).first():
+            flash("La clave ya está en uso. Debe de ser única.", "warning")
+            return render_template("centros_trabajos/new.jinja2", form=form)
+        # Guardar
+        centro_trabajo = CentroTrabajo(
+            clave=clave,
+            nombre=safe_string(form.nombre.data),
+            distrito_id=form.distrito.data,
+            organo_id=form.organo.data,
+            telefono=safe_string(form.telefono.data),
+            num_ext=safe_string(form.num_ext.data),
+            activo=form.activo.data,
+        )
+        centro_trabajo.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Centro de Trabajo {centro_trabajo.clave}"),
+            url=url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("centros_trabajos/new.jinja2", form=form)
 
-# EDIT
 
-# DELETE
+@centros_trabajos.route("/centros_trabajos/edicion/<int:centro_trabajo_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(centro_trabajo_id):
+    """Editar Centro de Trabajo"""
+    centro_trabajo = CentroTrabajo.query.get_or_404(centro_trabajo_id)
+    form = CentroTrabajoForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Si cambia la clave verificar que no este en uso
+        clave = safe_string(form.clave.data, save_enie=True)
+        if centro_trabajo.clave != clave:
+            CentroTrabajoForm_existente = CentroTrabajo.query.filter_by(clave=clave).first()
+            if CentroTrabajoForm_existente and CentroTrabajoForm_existente.id != centro_trabajo.id:
+                es_valido = False
+                flash("La clave ya está en uso. Debe de ser única.", "warning")
+        # Si es valido actualizar
+        if es_valido:
+            centro_trabajo.clave = clave
+            centro_trabajo.nombre = safe_string(form.nombre.data)
+            centro_trabajo.distrito_id = form.distrito.data
+            centro_trabajo.organo_id = form.organo.data
+            centro_trabajo.telefono = safe_string(form.telefono.data)
+            centro_trabajo.num_ext = safe_string(form.num_ext.data)
+            centro_trabajo.activo = form.activo.data
+            centro_trabajo.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Centro de Trabajo {centro_trabajo.clave}"),
+                url=url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.clave.data = centro_trabajo.clave
+    form.nombre.data = centro_trabajo.nombre
+    form.distrito.data = centro_trabajo.distrito.id
+    form.organo.data = centro_trabajo.organo.id
+    form.telefono.data = centro_trabajo.telefono
+    form.num_ext.data = centro_trabajo.num_ext
+    form.activo.data = centro_trabajo.activo
+    return render_template("centros_trabajos/edit.jinja2", form=form, centro_trabajo=centro_trabajo)
 
-# RECOVER
+
+@centros_trabajos.route("/centros_trabajos/eliminar/<int:centro_trabajo_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(centro_trabajo_id):
+    """Eliminar Centro de Trabajo"""
+    centro_trabajo = CentroTrabajo.query.get_or_404(centro_trabajo_id)
+    if centro_trabajo.estatus == "A":
+        centro_trabajo.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Centro de Trabajo {centro_trabajo.clave}"),
+            url=url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id))
+
+
+@centros_trabajos.route("/centros_trabajos/recuperar/<int:centro_trabajo_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(centro_trabajo_id):
+    """Recuperar Centro de Trabajo"""
+    centro_trabajo = CentroTrabajo.query.get_or_404(centro_trabajo_id)
+    if centro_trabajo.estatus == "B":
+        centro_trabajo.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Centro de Trabajo {centro_trabajo.clave}"),
+            url=url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id))
 
 
 @centros_trabajos.route("/centros_trabajos/query_centros_trabajos_json", methods=["POST"])

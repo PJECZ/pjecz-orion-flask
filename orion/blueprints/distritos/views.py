@@ -5,6 +5,7 @@ Distritos, vistas
 import json
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_string, safe_message
@@ -94,8 +95,14 @@ def list_inactive():
 def detail(distrito_id):
     """Detalle de un Distrito"""
     distrito = Distrito.query.get_or_404(distrito_id)
-    filtros_personas = json.dumps({"estatus": "A"})
-    return render_template("distritos/detail.jinja2", distrito=distrito, filtros_personas=filtros_personas)
+    filtros_centros_trabajos = json.dumps({"estatus": "A", "distrito_id": distrito.id})
+    filtros_personas = json.dumps({"estatus": "A", "distrito_id": distrito.id})
+    return render_template(
+        "distritos/detail.jinja2",
+        distrito=distrito,
+        filtros_centros_trabajos=filtros_centros_trabajos,
+        filtros_personas=filtros_personas,
+    )
 
 
 @distritos.route("/distritos/nuevo", methods=["GET", "POST"])
@@ -195,3 +202,22 @@ def recover(distrito_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("distritos.detail", distrito_id=distrito.id))
+
+
+@distritos.route("/distritos/query_distritos_json", methods=["POST"])
+def query_distritos_json():
+    """Proporcionar el JSON de Distritos para elegir en un Select2"""
+    consulta = Distrito.query.filter_by(estatus="A")
+    if "clave_nombre" in request.form:
+        clave_nombre = safe_string(request.form["clave_nombre"]).upper()
+        if clave_nombre != "":
+            consulta = consulta.filter(or_(Distrito.clave.contains(clave_nombre), Distrito.nombre.contains(clave_nombre)))
+    results = []
+    for centro_trabajo in consulta.order_by(Distrito.id).limit(15).all():
+        results.append(
+            {
+                "id": centro_trabajo.id,
+                "text": centro_trabajo.nombre_descriptivo,
+            }
+        )
+    return {"results": results, "pagination": {"more": False}}

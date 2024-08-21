@@ -5,6 +5,7 @@
 import json
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_string, safe_message
@@ -194,3 +195,22 @@ def recover(organo_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("organos.detail", organo_id=organo.id))
+
+
+@organos.route("/organos/query_organos_json", methods=["POST"])
+def query_organos_json():
+    """Proporcionar el JSON de Órganos para elegir en un Select2"""
+    consulta = Organo.query.filter_by(estatus="A")
+    if "clave_nombre" in request.form:
+        clave_nombre = safe_string(request.form["clave_nombre"]).upper()
+        if clave_nombre != "":
+            consulta = consulta.filter(or_(Organo.clave.contains(clave_nombre), Organo.nombre.contains(clave_nombre)))
+    results = []
+    for centro_trabajo in consulta.order_by(Organo.id).limit(15).all():
+        results.append(
+            {
+                "id": centro_trabajo.id,
+                "text": centro_trabajo.nombre_descriptivo,
+            }
+        )
+    return {"results": results, "pagination": {"more": False}}
