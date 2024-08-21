@@ -25,6 +25,7 @@
         {# {{ detail.label_value('Creado', moment(organo.creado, local=True).format('llll')) }} #}
     {% endcall %}
     <!-- card Centros de Trabajo -->
+    {% if current_user.can_view('CENTROS TRABAJOS') %}
     {% call detail.card('Centros de Trabajos') %}
         <!-- Filtros Centro de Trabajo -->
         <div class="row">
@@ -59,6 +60,7 @@
             </thead>
         </table>
     {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
@@ -67,31 +69,33 @@
         {% if organo.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + organo.clave + '?') }}{% endif %}
     {% endif %}
     {{ detail.moment_js(moment) }}
-    <script src="/static/js/datatables-constructor.js"></script>
-    <script src="/static/js/datatables-filtros.js"></script>
-    <script>
-        // DataTable CentrosTrabajos
-        const constructorDTCentrosTrabajos = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDTCentrosTrabajos = constructorDTCentrosTrabajos.config();
-        configDTCentrosTrabajos['ajax']['url'] = '/centros_trabajos/datatable_json';
-        configDTCentrosTrabajos['ajax']['data'] = {"estatus": "A", "organo_id": {{organo.id}}};
-        configDTCentrosTrabajos['columns'] = [
-            { data: 'detalle' },
-            { data: 'nombre' }
-        ];
-        configDTCentrosTrabajos['columnDefs'] = [
-            {
-                targets: 0, // detalle
-                data: null,
-                render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.clave + '</a>';
+    {% if current_user.can_view('CENTROS TRABAJOS') %}
+        <script src="/static/js/datatables-constructor.js"></script>
+        <script src="/static/js/datatables-filtros.js"></script>
+        <script>
+            // DataTable CentrosTrabajos
+            const constructorDTCentrosTrabajos = new ConfigDataTable( '{{ csrf_token() }}' );
+            let configDTCentrosTrabajos = constructorDTCentrosTrabajos.config();
+            configDTCentrosTrabajos['ajax']['url'] = '/centros_trabajos/datatable_json';
+            configDTCentrosTrabajos['ajax']['data'] = {"estatus": "A", "organo_id": {{organo.id}}};
+            configDTCentrosTrabajos['columns'] = [
+                { data: 'detalle' },
+                { data: 'nombre' }
+            ];
+            configDTCentrosTrabajos['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
                 }
-            }
-        ];
-        // Filtros CentrosTrabajos
-        const filtrosCentrosTrabajos = new FiltrosDataTable('#centros_trabajos_datatable', configDTCentrosTrabajos);
-        filtrosCentrosTrabajos.agregarInput('filtroClave', 'clave');
-        filtrosCentrosTrabajos.agregarInput('filtroNombre', 'nombre');
-        filtrosCentrosTrabajos.precargar();
-    </script>
+            ];
+            // Filtros CentrosTrabajos
+            const filtrosCentrosTrabajos = new FiltrosDataTable('#centros_trabajos_datatable', configDTCentrosTrabajos);
+            filtrosCentrosTrabajos.agregarInput('filtroClave', 'clave');
+            filtrosCentrosTrabajos.agregarInput('filtroNombre', 'nombre');
+            filtrosCentrosTrabajos.precargar();
+        </script>
+    {% endif %}
 {% endblock %}

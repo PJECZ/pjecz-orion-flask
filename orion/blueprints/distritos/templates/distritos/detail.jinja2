@@ -25,6 +25,7 @@
         {{ detail.label_value('Nombre', distrito.nombre) }}
     {% endcall %}
     <!-- card Centros de Trabajo -->
+    {% if current_user.can_view('CENTROS TRABAJOS') %}
     {% call detail.card('Centros de Trabajos') %}
         <!-- Filtros Centro de Trabajo -->
         <div class="row">
@@ -59,7 +60,9 @@
             </thead>
         </table>
     {% endcall %}
+    {% endif %}
     <!-- card Personas -->
+    {% if current_user.can_view('PERSONAS') %}
     {% call detail.card('Personas') %}
     <p>TODO: FALTA: filtrar personas en este distrito</p>
     <!-- Filtros Personas -->
@@ -90,6 +93,7 @@
             </thead>
         </table>
     {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
@@ -101,53 +105,59 @@
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
-        // DataTable CentrosTrabajos
-        const constructorDTCentrosTrabajos = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDTCentrosTrabajos = constructorDTCentrosTrabajos.config();
-        configDTCentrosTrabajos['ajax']['url'] = '/centros_trabajos/datatable_json';
-        configDTCentrosTrabajos['ajax']['data'] = {{ filtros_centros_trabajos }};
-        configDTCentrosTrabajos['columns'] = [
-            { data: 'detalle' },
-            { data: 'nombre' }
-        ];
-        configDTCentrosTrabajos['columnDefs'] = [
-            {
-                targets: 0, // detalle
-                data: null,
-                render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.clave + '</a>';
-                }
-            }
-        ];
-        // Filtros CentrosTrabajos
-        const filtrosCentrosTrabajos = new FiltrosDataTable('#centros_trabajos_datatable', configDTCentrosTrabajos);
-        filtrosCentrosTrabajos.agregarInput('filtroClave', 'clave');
-        filtrosCentrosTrabajos.agregarInput('filtroNombre', 'nombre');
-        filtrosCentrosTrabajos.precargar();
+        // DataTable CentrosDataTable
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <script>
-        // DataTable Personas
-        const constructorDTPersonas = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDTPersonas = constructorDTPersonas.config();
-        configDTPersonas['ajax']['url'] = '/personas/datatable_json';
-        configDTPersonas['ajax']['data'] = {{ filtros_personas }};
-        configDTPersonas['columns'] = [
-            { data: 'detalle' },
-            { data: 'sexo' },
-            { data: 'situacion' }
-        ];
-        configDTPersonas['columnDefs'] = [
-            {
-                targets: 0, // detalle
-                data: null,
-                render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.nombre_completo + '</a>';
+    {% if current_user.can_view('CENTROS TRABAJOS') %}
+        <script>
+            // DataTable CentrosTrabajos
+            let configDTCentrosTrabajos = constructorDataTable.config();
+            configDTCentrosTrabajos['ajax']['url'] = '/centros_trabajos/datatable_json';
+            configDTCentrosTrabajos['ajax']['data'] = {{ filtros_centros_trabajos }};
+            configDTCentrosTrabajos['columns'] = [
+                { data: 'detalle' },
+                { data: 'nombre' }
+            ];
+            configDTCentrosTrabajos['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
                 }
-            }
-        ];
-        // Filtros Personas
-        const filtrosPersonas = new FiltrosDataTable('#personas_datatable', configDTPersonas);
-        filtrosPersonas.agregarInput('filtroNombreCompleto', 'nombre_completo');
-        filtrosPersonas.precargar();
-    </script>
+            ];
+            // Filtros CentrosTrabajos
+            const filtrosCentrosTrabajos = new FiltrosDataTable('#centros_trabajos_datatable', configDTCentrosTrabajos);
+            filtrosCentrosTrabajos.agregarInput('filtroClave', 'clave');
+            filtrosCentrosTrabajos.agregarInput('filtroNombre', 'nombre');
+            filtrosCentrosTrabajos.precargar();
+        </script>
+    {% endif %}
+    {% if current_user.can_view('PERSONAS') %}
+        <script>
+            // DataTable Personas
+            let configDTPersonas = constructorDataTable.config();
+            configDTPersonas['ajax']['url'] = '/personas/datatable_json';
+            configDTPersonas['ajax']['data'] = {{ filtros_personas }};
+            configDTPersonas['columns'] = [
+                { data: 'detalle' },
+                { data: 'sexo' },
+                { data: 'situacion' }
+            ];
+            configDTPersonas['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.nombre_completo + '</a>';
+                    }
+                }
+            ];
+            // Filtros Personas
+            const filtrosPersonas = new FiltrosDataTable('#personas_datatable', configDTPersonas);
+            filtrosPersonas.agregarInput('filtroNombreCompleto', 'nombre_completo');
+            filtrosPersonas.precargar();
+        </script>
+    {% endif %}
 {% endblock %}
