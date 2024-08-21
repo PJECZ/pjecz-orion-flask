@@ -116,7 +116,7 @@ def new():
         nombre = safe_string(form.nombre.data, save_enie=True)
         if Area.query.filter_by(nombre=nombre).first():
             flash("El nombre ya está en uso. Debe de ser único.", "warning")
-            return render_template("carreras/new.jinja2", form=form)
+            return render_template("areas/new.jinja2", form=form)
         # Guardar
         area = Area(
             nombre=nombre,

@@ -1,0 +1,130 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_admin('PUESTOS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('puestos.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('puestos.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('PUESTOS') %}
+            {{ topbar.button_new('Nuevo Puesto', url_for('puestos.new')) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros puestos -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPuestos.buscar(); return false;">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroClave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
+                            <label for="filtroClave">Clave</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroNombre" type="text" class="form-control" aria-label="Nombre" style="text-transform: uppercase;">
+                            <label for="filtroNombre">Nombre</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <select id="filtroTipoCargo" class="form-control" aria-label="Tipo Cargo" onchange="filtrosPuestos.buscar(); return false;" style="flex: inherit;">
+                                <option selected value=""></option>
+                                {% for clave, valor in tipos_cargos.items() %}
+                                    <option value="{{clave}}">{{valor}}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="filtroTipoCargo">Tipo de Cargo</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <select id="filtroTipoEmpleado" class="form-control" aria-label="Tipo Empleado" onchange="filtrosPuestos.buscar(); return false;" style="flex: inherit;">
+                                <option selected value=""></option>
+                                {% for tipo in tipos_empleados %}
+                                    <option value="{{tipo}}">{{tipo}}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="filtroTipoEmpleado">Tipo de Empleado</label>
+                        </div>
+                    </div>
+                    <div class="col-2 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosPuestos.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosPuestos.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable puestos -->
+        <table id="puestos_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Clave</th>
+                    <th>Nombre</th>
+                    <th>Tipo de Cargo</th>
+                    <th>Tipo de Empleado</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable puestos
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDataTable = constructorDataTable.config();
+        configDataTable['ajax']['url'] = '/puestos/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: 'detalle' },
+            { data: 'nombre' },
+            { data: 'tipo_cargo' },
+            { data: 'tipo_empleado' }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.clave + '</a>';
+                }
+            },
+            {
+                targets: 1, // nombre
+                data: null,
+                render: function(data, type, row, meta) {
+                    texto = data;
+                    if (data.length > 32) {
+                        texto = data.substr(0, 32) + '…';
+                    }
+                    return '<span title="' + data + '">' + texto + '</span>';
+                }
+            },
+            {
+                targets: 3, // tipo_empleado
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<span title="' + data.descripcion + '">' + data.nombre + '</span>';
+                }
+            }
+        ];
+        // Filtros puestos
+        const filtrosPuestos = new FiltrosDataTable('#puestos_datatable', configDataTable);
+        filtrosPuestos.agregarInput('filtroClave', 'clave');
+        filtrosPuestos.agregarInput('filtroNombre', 'nombre');
+        filtrosPuestos.agregarInput('filtroTipoCargo', 'tipo_cargo');
+        filtrosPuestos.agregarInput('filtroTipoEmpleado', 'tipo_empleado');
+        filtrosPuestos.precargar();
+    </script>
+{% endblock %}

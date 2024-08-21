@@ -36,7 +36,6 @@
                     </div>
                     <div class="col-4">
                         <div class="form-floating">
-                            {# <input id="filtroTipo" type="text" class="form-control" aria-label="Tipo"> #}
                             <select id="filtroTipo" class="form-control" aria-label="Tipo" onchange="filtrosLicencias.buscar(); return false;" style="flex: inherit;">
                                 <option selected value=""></option>
                                 {% for tipo in tipos %}

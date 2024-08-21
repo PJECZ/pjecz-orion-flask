@@ -1,0 +1,22 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Puesto {{ puesto.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar ' + puesto.clave) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'puesto_id': puesto.id} %}
+        {% call f.form_tag('puestos.edit', fid='puesto_form', **form_kwargs) %}
+            {% call f.form_group(form.clave) %}{% endcall %}
+            {% call f.form_group(form.nombre) %}{% endcall %}
+            {% call f.form_group(form.tipo_cargo) %}{% endcall %}
+            {% call f.form_group(form.tipo_empleado) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
