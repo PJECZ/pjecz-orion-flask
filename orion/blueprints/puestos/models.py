@@ -2,12 +2,10 @@
 Puestos, modelos
 """
 
-from datetime import datetime
-from typing import List, Optional
+from typing import List
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, JSON, Integer, String, Text, Uuid
+from sqlalchemy import Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql.functions import now
 
 from lib.universal_mixin import UniversalMixin
 from orion.extensions import database

@@ -121,7 +121,7 @@ def new():
     form = PuestoForm()
     if form.validate_on_submit():
         # Validar que la clave no se repita
-        clave = safe_string(form.clave.data, save_enie=True)
+        clave = safe_clave(form.clave.data)
         if Puesto.query.filter_by(clave=clave).first():
             flash("La clave ya está en uso. Debe de ser única.", "warning")
             return render_template("puestos/new.jinja2", form=form)
@@ -154,7 +154,7 @@ def edit(puesto_id):
     if form.validate_on_submit():
         es_valido = True
         # Si cambia el clave verificar que no este en uso
-        clave = safe_string(form.clave.data, save_enie=True)
+        clave = safe_clave(form.clave.data)
         if puesto.clave != clave:
             puesto_existente = Puesto.query.filter_by(clave=clave).first()
             if puesto_existente and puesto_existente.id != puesto.id:
