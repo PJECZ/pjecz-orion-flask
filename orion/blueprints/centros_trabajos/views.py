@@ -8,7 +8,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import or_
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_string, safe_message
+from lib.safe_string import safe_string, safe_message, safe_clave
 
 from orion.blueprints.bitacoras.models import Bitacora
 from orion.blueprints.centros_trabajos.forms import CentroTrabajoForm
@@ -42,7 +42,7 @@ def datatable_json():
     else:
         consulta = consulta.filter_by(estatus="A")
     if "clave" in request.form:
-        clave = safe_string(request.form["clave"])
+        clave = safe_clave(request.form["clave"])
         if clave != "":
             consulta = consulta.filter(CentroTrabajo.clave.contains(clave))
     if "nombre" in request.form:
@@ -113,7 +113,7 @@ def new():
     form = CentroTrabajoForm()
     if form.validate_on_submit():
         # Validar que la clave no se repita
-        clave = safe_string(form.clave.data, save_enie=True)
+        clave = safe_clave(form.clave.data)
         if CentroTrabajo.query.filter_by(clave=clave).first():
             flash("La clave ya está en uso. Debe de ser única.", "warning")
             return render_template("centros_trabajos/new.jinja2", form=form)
@@ -149,7 +149,7 @@ def edit(centro_trabajo_id):
     if form.validate_on_submit():
         es_valido = True
         # Si cambia la clave verificar que no este en uso
-        clave = safe_string(form.clave.data, save_enie=True)
+        clave = safe_clave(form.clave.data)
         if centro_trabajo.clave != clave:
             CentroTrabajoForm_existente = CentroTrabajo.query.filter_by(clave=clave).first()
             if CentroTrabajoForm_existente and CentroTrabajoForm_existente.id != centro_trabajo.id:

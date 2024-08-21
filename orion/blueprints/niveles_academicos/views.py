@@ -7,7 +7,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_string, safe_message
+from lib.safe_string import safe_string, safe_message, safe_clave
 
 from orion.blueprints.bitacoras.models import Bitacora
 from orion.blueprints.modulos.models import Modulo
@@ -41,7 +41,7 @@ def datatable_json():
     else:
         consulta = consulta.filter_by(estatus="A")
     if "clave" in request.form:
-        clave = safe_string(request.form["clave"])
+        clave = safe_clave(request.form["clave"])
         if clave != "":
             consulta = consulta.filter(NivelAcademico.clave.contains(clave))
     if "nombre" in request.form:
@@ -104,7 +104,7 @@ def new():
     form = NivelAcademicoForm()
     if form.validate_on_submit():
         # Validar que el nombre no se repita
-        clave = safe_string(form.clave.data)
+        clave = safe_clave(form.clave.data)
         if NivelAcademico.query.filter_by(clave=clave).first():
             flash("La clave ya está en uso. Debe de ser única.", "warning")
             return render_template("niveles_academicos/new.jinja2", form=form)
@@ -135,7 +135,7 @@ def edit(nivel_academico_id):
     if form.validate_on_submit():
         es_valido = True
         # Si cambia el nombre verificar que no este en uso
-        clave = safe_string(form.clave.data, save_enie=True)
+        clave = safe_clave(form.clave.data)
         if nivel_academico.clave != clave:
             nivel_academico_existente = nivel_academico.query.filter_by(clave=clave).first()
             if nivel_academico_existente and nivel_academico_existente.id != nivel_academico.id:
