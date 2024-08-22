@@ -1,0 +1,20 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nuevo Puesto Función{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Nuevo Puesto Función') }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'puesto_id': puesto.id} %}
+        {% call f.form_tag('puestos_funciones.new_with_puesto', fid='puesto_funcion_form', **form_kwargs) %}
+            {% call f.form_group(form.puesto, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.nombre) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
