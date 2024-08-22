@@ -19,6 +19,7 @@ from orion.blueprints.niveles_academicos.views import niveles_academicos
 from orion.blueprints.organos.views import organos
 from orion.blueprints.permisos.views import permisos
 from orion.blueprints.personas.views import personas
+from orion.blueprints.puestos.views import puestos
 from orion.blueprints.roles.views import roles
 from orion.blueprints.sistemas.views import sistemas
 from orion.blueprints.tareas.views import tareas
@@ -53,6 +54,7 @@ def create_app():
     app.register_blueprint(organos)
     app.register_blueprint(permisos)
     app.register_blueprint(personas)
+    app.register_blueprint(puestos)
     app.register_blueprint(roles)
     app.register_blueprint(sistemas)
     app.register_blueprint(tareas)
