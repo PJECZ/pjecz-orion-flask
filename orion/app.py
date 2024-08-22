@@ -24,6 +24,7 @@ from orion.blueprints.puestos_funciones.views import puestos_funciones
 from orion.blueprints.roles.views import roles
 from orion.blueprints.sistemas.views import sistemas
 from orion.blueprints.tareas.views import tareas
+from orion.blueprints.turnos.views import turnos
 from orion.blueprints.usuarios.models import Usuario
 from orion.blueprints.usuarios.views import usuarios
 from orion.blueprints.usuarios_roles.views import usuarios_roles
@@ -60,6 +61,7 @@ def create_app():
     app.register_blueprint(roles)
     app.register_blueprint(sistemas)
     app.register_blueprint(tareas)
+    app.register_blueprint(turnos)
     app.register_blueprint(usuarios)
     app.register_blueprint(usuarios_roles)
 
