@@ -113,7 +113,7 @@
             // DataTable CentrosTrabajos
             let configDTCentrosTrabajos = constructorDataTable.config();
             configDTCentrosTrabajos['ajax']['url'] = '/centros_trabajos/datatable_json';
-            configDTCentrosTrabajos['ajax']['data'] = {{ filtros_centros_trabajos }};
+            configDTCentrosTrabajos['ajax']['data'] = {"estatus": "A", "distrito_id": {{distrito.id}}};
             configDTCentrosTrabajos['columns'] = [
                 { data: 'detalle' },
                 { data: 'nombre' }
@@ -139,7 +139,7 @@
             // DataTable Personas
             let configDTPersonas = constructorDataTable.config();
             configDTPersonas['ajax']['url'] = '/personas/datatable_json';
-            configDTPersonas['ajax']['data'] = {{ filtros_personas }};
+            configDTPersonas['ajax']['data'] = {"estatus": "A", "distrito_id": {{distrito.id}}};
             configDTPersonas['columns'] = [
                 { data: 'detalle' },
                 { data: 'sexo' },
