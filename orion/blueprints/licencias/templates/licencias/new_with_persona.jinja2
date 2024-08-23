@@ -10,7 +10,7 @@
 
 {% block content %}
     {% call f.card() %}
-        {% call f.form_tag('licencias.new', fid='licencia_form') %}
+        {% call f.form_tag('licencias.new_with_persona', fid='licencia_form') %}
             {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
             {% call f.form_group(form.tipo) %}{% endcall %}
             {% call f.form_group(form.fecha_inicio) %}{% endcall %}

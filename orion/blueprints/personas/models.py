@@ -133,7 +133,7 @@ class Persona(database.Model, UniversalMixin):
     # familiares = db.relationship("PersonaFamiliar", back_populates="persona")
     # personas_domicilios = db.relationship("PersonaDomicilio", back_populates="persona")
     # personas_enfermedades = db.relationship("PersonaEnfermedad", back_populates="persona")
-    # historial_puestos = db.relationship("HistorialPuesto", back_populates="persona")
+    historial_puestos: Mapped[List["HistorialPuesto"]] = relationship(back_populates="persona")
     # historial_academicos = db.relationship("HistorialAcademico", back_populates="persona")
     # historial_laborales = db.relationship("HistorialLaboral", back_populates="persona")
     licencias: Mapped[List["Licencia"]] = relationship(back_populates="persona")
