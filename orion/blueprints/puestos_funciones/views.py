@@ -74,11 +74,7 @@ def detail(puesto_funcion_id):
     """Detalle de un Puesto Funcion"""
     puesto_funcion = PuestoFuncion.query.get_or_404(puesto_funcion_id)
     # personas_activas = db.session.query(Persona).join(HistorialPuesto).filter(HistorialPuesto.puesto_funcion_id == puesto_funcion_id).filter(HistorialPuesto.fecha_termino == None).filter(Persona.estatus == "A").limit(100).all()
-    return render_template(
-        "puestos_funciones/detail.jinja2",
-        puesto_funcion=puesto_funcion,
-        filtros_personas=json.dumps({"estatus": "A"}),
-    )
+    return render_template("puestos_funciones/detail.jinja2", puesto_funcion=puesto_funcion)
 
 
 @puestos_funciones.route("/puestos_funciones/nuevo_con_puesto/<int:puesto_id>", methods=["GET", "POST"])

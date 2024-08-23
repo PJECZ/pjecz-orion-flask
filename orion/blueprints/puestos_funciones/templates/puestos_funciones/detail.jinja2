@@ -72,7 +72,7 @@
             const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
             let configDTPersonas = constructorDataTable.config();
             configDTPersonas['ajax']['url'] = '/personas/datatable_json';
-            configDTPersonas['ajax']['data'] = {{ filtros_personas }};
+            configDTPersonas['ajax']['data'] = {"estatus": "A"};
             configDTPersonas['columns'] = [
                 { data: 'detalle' },
                 { data: 'sexo' },

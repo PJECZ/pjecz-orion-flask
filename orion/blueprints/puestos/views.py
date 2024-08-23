@@ -111,11 +111,7 @@ def list_inactive():
 def detail(puesto_id):
     """Detalle de un Puesto"""
     puesto = Puesto.query.get_or_404(puesto_id)
-    return render_template(
-        "puestos/detail.jinja2",
-        puesto=puesto,
-        filtros_puestos_funciones=json.dumps({"estatus": "A", "puesto_id": puesto.id}),
-    )
+    return render_template("puestos/detail.jinja2", puesto=puesto)
 
 
 @puestos.route("/puestos/nuevo", methods=["GET", "POST"])
