@@ -100,7 +100,7 @@ def safe_string(input_str, max_len=250, do_unidecode=True, save_enie=False, to_u
     if not isinstance(input_str, str):
         return ""
     if do_unidecode:
-        new_string = re.sub(r"[^a-zA-Z0-9.,()/-]+", " ", input_str)
+        new_string = re.sub(r"[^a-zA-Z0-9.,%()/-]+", " ", input_str)
         if save_enie:
             new_string = ""
             for char in input_str:
@@ -111,12 +111,12 @@ def safe_string(input_str, max_len=250, do_unidecode=True, save_enie=False, to_u
                 else:
                     new_string += unidecode(char)
         else:
-            new_string = re.sub(r"[^a-zA-Z0-9.,()/-]+", " ", unidecode(input_str))
+            new_string = re.sub(r"[^a-zA-Z0-9.,%()/-]+", " ", unidecode(input_str))
     else:
         if save_enie is False:
-            new_string = re.sub(r"[^a-záéíóúüA-ZÁÉÍÓÚÜ0-9.,()/-]+", " ", input_str)
+            new_string = re.sub(r"[^a-záéíóúüA-ZÁÉÍÓÚÜ0-9.,%()/-]+", " ", input_str)
         else:
-            new_string = re.sub(r"[^a-záéíóúüñA-ZÁÉÍÓÚÜÑ0-9.,()/-]+", " ", input_str)
+            new_string = re.sub(r"[^a-záéíóúüñA-ZÁÉÍÓÚÜÑ0-9.,%()/-]+", " ", input_str)
     removed_multiple_spaces = re.sub(r"\s+", " ", new_string)
     final = removed_multiple_spaces.strip()
     if to_uppercase:

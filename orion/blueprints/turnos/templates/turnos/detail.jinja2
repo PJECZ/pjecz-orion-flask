@@ -1,0 +1,34 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Turno{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Turno') %}
+        {{ topbar.button_previous('Turnos', url_for('turnos.list_active')) }}
+        {% if current_user.can_edit('TURNOS') %}
+            {{ topbar.button_edit('Editar', url_for('turnos.edit', turno_id=turno.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('TURNOS') %}
+            {% if turno.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('turnos.delete', turno_id=turno.id)) }}{% endif %}
+            {% if turno.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('turnos.recover', turno_id=turno.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=turno.estatus) %}
+        {{ detail.label_value('Nombre', turno.nombre) }}
+        {{ detail.label_value('Descripción', turno.descripcion) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('TURNOS') %}
+        {% if turno.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + turno.nombre + '?') }}{% endif %}
+        {% if turno.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + turno.nombre + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}
