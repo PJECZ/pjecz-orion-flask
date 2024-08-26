@@ -17,7 +17,7 @@
 {% block content %}
     {% call f.card() %}
         {% set form_kwargs = {'persona_id': persona.id} %}
-        {% call f.form_tag('historial_puestos.new_with_person', fid='historial_puesto_form', **form_kwargs) %}
+        {% call f.form_tag('historial_puestos.new_with_persona_id', fid='historial_puesto_form', **form_kwargs) %}
             {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
             {% call f.form_group(form.puesto) %}{% endcall %}
             {% call f.form_group(form.funcion) %}{% endcall %}

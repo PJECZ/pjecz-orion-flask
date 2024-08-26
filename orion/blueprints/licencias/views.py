@@ -161,14 +161,14 @@ def new():
 
 @licencias.route("/licencias/nuevo_con_persona/<int:persona_id>", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
-def new_with_person(persona_id):
+def new_with_persona_id(persona_id):
     """Nueva Licencia con Persona"""
     persona = Persona.query.get_or_404(persona_id)
     form = LicenciaWithPersonaForm()
     if form.validate_on_submit():
         if form.fecha_termino.data < form.fecha_inicio.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
-            return render_template("licencias/new_with_person.jinja2", form=form, persona=persona)
+            return render_template("licencias/new_with_persona_id.jinja2", form=form, persona=persona)
         # Leer el historial de puestos para extraer el nombre del puesto en esa fecha.
         historial_puesto = HistorialPuesto.query.filter_by(persona=persona).filter_by(estatus="A")
         historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
@@ -197,7 +197,7 @@ def new_with_person(persona_id):
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
     form.persona.data = persona.nombre_completo
-    return render_template("licencias/new_with_person.jinja2", form=form, persona=persona)
+    return render_template("licencias/new_with_persona_id.jinja2", form=form, persona=persona)
 
 
 @licencias.route("/licencias/edicion/<int:licencia_id>", methods=["GET", "POST"])

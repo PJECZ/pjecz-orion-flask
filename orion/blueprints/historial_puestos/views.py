@@ -82,7 +82,7 @@ def detail(historial_puesto_id):
 
 @historial_puestos.route("/historial_puestos/nuevo/<int:persona_id>", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
-def new_with_person(persona_id):
+def new_with_persona_id(persona_id):
     """Nuevo Historial de Puesto"""
     persona = Persona.query.get_or_404(persona_id)
     form = HistorialPuestoForm()
@@ -90,17 +90,17 @@ def new_with_person(persona_id):
         # Validar fechas
         if form.fecha_termino.data != None and form.fecha_inicio.data > form.fecha_termino.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de término.", "warning")
-            return render_template("historial_puestos/new_with_person.jinja2", form=form, persona=persona)
+            return render_template("historial_puestos/new_with_persona_id.jinja2", form=form, persona=persona)
         # Validar Centro de Trabajo
         centro_trabajo = CentroTrabajo.query.get(form.centro_trabajo.data)
         if centro_trabajo is None:
             flash("Error: No se localiza el Centro de Trabajo elegida.", "danger")
-            return render_template("historial_puestos/new_with_person.jinja2", form=form, persona=persona)
+            return render_template("historial_puestos/new_with_persona_id.jinja2", form=form, persona=persona)
         # Validar Área
         area = Area.query.get(form.area.data)
         if area is None:
             flash("Error: No se localiza el Área elegida.", "danger")
-            return render_template("historial_puestos/new_with_person.jinja2", form=form, persona=persona)
+            return render_template("historial_puestos/new_with_persona_id.jinja2", form=form, persona=persona)
         # Guardar registro
         historial_puesto = HistorialPuesto(
             persona=persona,
@@ -127,7 +127,7 @@ def new_with_person(persona_id):
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
     form.persona.data = persona.nombre_completo
-    return render_template("historial_puestos/new_with_person.jinja2", form=form, persona=persona)
+    return render_template("historial_puestos/new_with_persona_id.jinja2", form=form, persona=persona)
 
 
 @historial_puestos.route("/historial_puestos/edicion/<int:historial_puesto_id>", methods=["GET", "POST"])

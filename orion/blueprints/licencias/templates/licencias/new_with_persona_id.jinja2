@@ -11,7 +11,7 @@
 {% block content %}
     {% call f.card() %}
         {% set form_kwargs = {'persona_id': persona.id} %}
-        {% call f.form_tag('licencias.new_with_person', fid='licencia_form', **form_kwargs) %}
+        {% call f.form_tag('licencias.new_with_persona_id', fid='licencia_form', **form_kwargs) %}
             {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
             {% call f.form_group(form.tipo) %}{% endcall %}
             {% call f.form_group(form.fecha_inicio) %}{% endcall %}
