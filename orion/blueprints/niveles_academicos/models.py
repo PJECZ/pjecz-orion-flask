@@ -25,6 +25,7 @@ class NivelAcademico(database.Model, UniversalMixin):
     nombre: Mapped[str] = mapped_column(String(64))
 
     # Hijos
+    # TODO: Conectar con hijos
     personas: Mapped[List["Persona"]] = relationship("Persona", back_populates="nivel_estudios_max")
     # historial_academicos = db.relationship("HistorialAcademico", back_populates="nivel_academico")
 

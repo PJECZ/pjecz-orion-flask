@@ -107,6 +107,7 @@ class Persona(database.Model, UniversalMixin):
         Enum(*ESTADOS_CIVILES, name="personas_estados_civiles", native_enum=False), index=True
     )
     madre: Mapped[bool] = mapped_column(default=False)  # TODO: Cmabiar a es_madre
+    # TODO: Declarar columnas restantes
     # nivel_estudios = db.Column(db.Enum(*OrderedDict(ESTUDIOS), name="nivel_estudios", native_enum=False), index=False, nullable=True)
     # cedula_profesional = db.Column(db.String(16))
     # observaciones = db.Column(db.String(512))
@@ -127,6 +128,7 @@ class Persona(database.Model, UniversalMixin):
     falta_papeleria: Mapped[bool] = mapped_column(default=False)
 
     # Hijos
+    # TODO: Conectar hijos
     # fotografias = db.relationship("PersonaFotografia", back_populates="persona")
     # sistemas = db.relationship("SistemaPersona", back_populates="persona")
     # cursos = db.relationship("PersonaCurso", back_populates="persona")

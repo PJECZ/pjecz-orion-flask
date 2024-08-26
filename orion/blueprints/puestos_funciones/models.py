@@ -28,6 +28,7 @@ class PuestoFuncion(database.Model, UniversalMixin):
     nombre: Mapped[str] = mapped_column(String(128))
 
     # Hijos
+    # TODO: Conectar hijos
     historial_puestos: Mapped[List["HistorialPuesto"]] = relationship(back_populates="puesto_funcion")
     # atribuciones = db.relationship("Atribucion", back_populates="funcion")
 
