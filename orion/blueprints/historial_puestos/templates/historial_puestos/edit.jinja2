@@ -1,0 +1,196 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Historial de Puesto {{ historial_puesto.id }}{% endblock %}
+
+{% block custom_head %}
+    <!-- Select2 bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://storage.googleapis.com/pjecz-informatica/static/css/select2.css" rel="stylesheet" />
+{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar - Historial de Puesto') }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'historial_puesto_id': historial_puesto.id} %}
+        {% call f.form_tag('historial_puestos.edit', fid='historial_puesto_form', **form_kwargs) %}
+            {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.puesto) %}{% endcall %}
+            {% call f.form_group(form.funcion) %}{% endcall %}
+            {% call f.form_group(form.centro_trabajo) %}{% endcall %}
+            {% call f.form_group(form.area) %}{% endcall %}
+            {% call f.form_group(form.turno) %}{% endcall %}
+            {% call f.form_group(form.fecha_inicio) %}{% endcall %}
+            {% call f.form_group(form.fecha_termino) %}{% endcall %}
+            {% call f.form_group(form.nivel) %}{% endcall %}
+            {% call f.form_group(form.quinquenio) %}{% endcall %}
+            {% call f.form_group(form.nombramiento) %}{% endcall %}
+            {% call f.form_group(form.tipo_nombramiento) %}{% endcall %}
+            {% call f.form_group(form.nombramiento_observaciones) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+
+{% block custom_javascript %}
+    <!-- Select2 bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Select2 Combo: para Puestos y puestos_funciones -->
+    <script>
+        $(document).ready(function(){
+            $("#puesto").select2({
+                // --- Carga de registros por Ajax --- //
+                ajax: {
+                    url: '/puestos/query_puestos_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'clave_nombre': params.term.toUpperCase() };
+                    }
+                },
+                placeholder: "Clave: Nombre del Puesto",
+                minimumInputLength: 3,
+                allowClear: true
+            });
+            // Seleccionar Centro de Trabajo guardado anteriormente
+            let data = {
+                id: '{{historial_puesto.puesto_funcion.puesto.id}}',
+                text: '{{historial_puesto.puesto_funcion.puesto.clave}}' + ': ' + '{{historial_puesto.puesto_funcion.puesto.nombre}}'
+            };
+            let newOption = new Option(data.text, data.id, false, false);
+            $('#puesto').append(newOption).trigger('change');
+
+            // Seleccionar Área guardado anteriormente
+            let data_2 = {
+                id: '{{historial_puesto.puesto_funcion.id}}',
+                text: '{{historial_puesto.puesto_funcion.nombre}}'
+            };
+            let newOption_2 = new Option(data_2.text, data_2.id, false, false);
+            $('#funcion').append(newOption_2).trigger('change');
+        });
+
+        $('#puesto').on("select2:clear", function (e) {
+            $('#funcion').val(null).trigger('change');
+            $('#funcion').prop("disabled", true);
+        });
+
+        $('#puesto').on("select2:select", function (e) {
+            $('#funcion').prop("disabled", false);
+            $("#funcion").select2({
+                ajax: {
+                    url: '/puestos_funciones/query_puestos_funciones_json',
+                    headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        if(params.term == undefined) {
+                            return {  'puesto_id':  $('#puesto').val() }
+                        }
+                        return { 'nombre': params.term.toUpperCase(), 'puesto_id':  $('#puesto').val() };
+                    }
+                },
+                placeholder: "Funciones",
+                allowClear: false,
+            });
+            $('#funcion').val(null).trigger('change');
+        });
+    </script>
+    <!-- Select2 combo: Centro de Trabajo y Áreas -->
+    <script>
+    $(document).ready(function () {
+        $("#centro_trabajo").select2({
+            ajax: {
+                url: '/centros_trabajos/query_centros_trabajos_json',
+                headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                dataType: 'json',
+                delay: 250,
+                type: "POST",
+                data: function (params) {
+                    return { 'clave_nombre': params.term.toUpperCase() };
+                }
+            },
+            placeholder: "Clave: Nombre del Centro de Trabajo",
+            minimumInputLength: 3,
+            allowClear: true
+        });
+         // Seleccionar Centro de Trabajo guardado anteriormente
+        let data = {
+            id: '{{centro_trabajo.id}}',
+            text: '{{centro_trabajo.clave}}' + ': ' + '{{centro_trabajo.nombre}}'
+        };
+        let newOption = new Option(data.text, data.id, false, false);
+        $('#centro_trabajo').append(newOption).trigger('change');
+
+        // Seleccionar Área guardado anteriormente
+        let data_area = {
+            id: '{{area.id}}',
+            text: '{{area.nombre}}'
+        };
+        let newOption_area = new Option(data_area.text, data_area.id, false, false);
+        $('#area').append(newOption_area).trigger('change');
+    });
+
+    $('#centro_trabajo').on("select2:clear", function (e) {
+        $('#area').val(null).trigger('change');
+        $('#area').prop("disabled", true);
+    });
+
+    $('#centro_trabajo').on("select2:select", function (e) {
+        $('#area').prop("disabled", false);
+        $("#area").select2({
+            ajax: {
+                url: '/areas/query_areas_json',
+                headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                dataType: 'json',
+                delay: 250,
+                type: "POST",
+                data: function (params) {
+                    if(params.term == undefined) {
+                        return {  'centro_trabajo_id':  $('#centro_trabajo').val() }
+                    }
+                    return { 'nombre': params.term.toUpperCase(), 'centro_trabajo_id':  $('#centro_trabajo').val() };
+                }
+            },
+            placeholder: "Areas",
+            allowClear: false,
+        });
+        $('#area').val(null).trigger('change');
+    });
+    </script>
+    <!-- Select2 para Turnos -->
+    <script>
+    $(document).ready(function () {
+        $("#turno").select2({
+            ajax: {
+                url: '/turnos/query_turnos_json',
+                headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                delay: 250,
+                type: "POST",
+                data: function (params) {
+                    return { 'nombre': params.term.toUpperCase() };
+                }
+            },
+            placeholder: "Turno: Descripción",
+            allowClear: false,
+        });
+        // Seleccionar el Turno guardado anteriormente
+        let data = {
+            id: '{{historial_puesto.turno.id}}',
+            text: '{{historial_puesto.turno.nombre}}'
+        };
+        if ('{{historial_puesto.turno.descripcion}}' != "") {
+            data.text = data.text + ': ' + '{{historial_puesto.turno.descripcion}}';
+        }
+        let newOption = new Option(data.text, data.id, false, false);
+        $('#turno').append(newOption).trigger('change');
+    });
+    </script>
+{% endblock %}

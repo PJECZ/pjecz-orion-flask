@@ -203,3 +203,24 @@ def recover(area_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("areas.detail", area_id=area.id))
+
+
+@areas.route("/areas/query_areas_json", methods=["POST"])
+def query_areas_json():
+    """Proporcionar el JSON de Áreas para elegir en un Select2"""
+    consulta = Area.query.filter_by(estatus="A")
+    if "centro_trabajo_id" in request.form:
+        consulta = consulta.filter(Area.centro_trabajo_id == request.form["centro_trabajo_id"])
+    if "nombre" in request.form:
+        nombre = safe_string(request.form["nombre"]).upper()
+        if nombre != "":
+            consulta = consulta.filter(Area.nombre.contains(nombre))
+    results = []
+    for area in consulta.order_by(Area.nombre).limit(15).all():
+        results.append(
+            {
+                "id": area.id,
+                "text": area.nombre,
+            }
+        )
+    return {"results": results, "pagination": {"more": False}}

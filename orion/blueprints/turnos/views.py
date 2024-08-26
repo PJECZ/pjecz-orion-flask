@@ -194,3 +194,22 @@ def recover(turno_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("turnos.detail", turno_id=turno.id))
+
+
+@turnos.route("/turnos/query_turnos_json", methods=["POST"])
+def query_turnos_json():
+    """Proporcionar el JSON de Áreas para elegir en un Select2"""
+    consulta = Turno.query.filter_by(estatus="A")
+    if "nombre" in request.form:
+        nombre = safe_string(request.form["nombre"]).upper()
+        if nombre != "":
+            consulta = consulta.filter(Turno.nombre.contains(nombre))
+    results = []
+    for turno in consulta.order_by(Turno.nombre).limit(15).all():
+        results.append(
+            {
+                "id": turno.id,
+                "text": turno.nombre,
+            }
+        )
+    return {"results": results, "pagination": {"more": False}}

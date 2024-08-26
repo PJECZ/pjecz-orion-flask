@@ -11,6 +11,7 @@ from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_string, safe_message
 
 from orion.blueprints.bitacoras.models import Bitacora
+from orion.blueprints.historial_puestos.models import HistorialPuesto
 from orion.blueprints.modulos.models import Modulo
 from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.personas.models import Persona
@@ -128,22 +129,24 @@ def new():
         if form.fecha_termino.data < form.fecha_inicio.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
             return render_template("licencias/new.jinja2", form=form)
-        # historial_puesto = HistorialPuesto.query.filter_by(persona=form.persona.data).filter_by(estatus='A')
-        # historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
-        # historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
-        # puesto_nombre = None
-        # if historial_puesto:
-        #     puesto_nombre = historial_puesto.puesto_funcion.nombre
+        # Leer el historial de puestos para extraer el nombre del puesto en esa fecha.
+        historial_puesto = HistorialPuesto.query.filter_by(persona=form.persona.data).filter_by(estatus="A")
+        historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+        historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+        puesto_nombre = None
+        if historial_puesto:
+            puesto_nombre = historial_puesto.puesto_funcion.nombre
+        # Guardar la Licencia
         liciencia = Licencia(
             persona_id=form.persona.data,
             tipo=form.tipo.data,
             fecha_inicio=form.fecha_inicio.data,
             fecha_termino=form.fecha_termino.data,
             con_goce=form.con_goce.data,
-            motivo=safe_string(form.motivo.data),
-            # puesto_nombre=puesto_nombre,
+            motivo=safe_string(form.motivo.data, save_enie=True),
+            puesto_nombre=puesto_nombre,
         )
-        # liciencia.save()
+        liciencia.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
@@ -158,41 +161,43 @@ def new():
 
 @licencias.route("/licencias/nuevo_con_persona/<int:persona_id>", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
-def new_with_persona(persona_id):
+def new_with_persona_id(persona_id):
     """Nueva Licencia con Persona"""
     persona = Persona.query.get_or_404(persona_id)
     form = LicenciaWithPersonaForm()
     if form.validate_on_submit():
         if form.fecha_termino.data < form.fecha_inicio.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
-            return render_template("licencias/new_with_persona.jinja2", form=form)
-        # historial_puesto = HistorialPuesto.query.filter_by(persona=form.persona.data).filter_by(estatus='A')
-        # historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
-        # historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
-        # puesto_nombre = None
-        # if historial_puesto:
-        #     puesto_nombre = historial_puesto.puesto_funcion.nombre
+            return render_template("licencias/new_with_persona_id.jinja2", form=form, persona=persona)
+        # Leer el historial de puestos para extraer el nombre del puesto en esa fecha.
+        historial_puesto = HistorialPuesto.query.filter_by(persona=persona).filter_by(estatus="A")
+        historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+        historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+        puesto_nombre = None
+        if historial_puesto:
+            puesto_nombre = historial_puesto.puesto_funcion.nombre
+        # Guardar la Licencia
         liciencia = Licencia(
-            persona_id=form.persona.id,
+            persona=persona,
             tipo=form.tipo.data,
             fecha_inicio=form.fecha_inicio.data,
             fecha_termino=form.fecha_termino.data,
             con_goce=form.con_goce.data,
-            motivo=safe_string(form.motivo.data),
-            # puesto_nombre=puesto_nombre,
+            motivo=safe_string(form.motivo.data, save_enie=True),
+            puesto_nombre=puesto_nombre,
         )
-        # liciencia.save()
+        liciencia.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Nuevo Licencia {liciencia.persona.nombre_completo}"),
+            descripcion=safe_message(f"Nueva Licencia {liciencia.persona.nombre_completo}"),
             url=url_for("licencias.detail", liciencia_id=liciencia.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
     form.persona.data = persona.nombre_completo
-    return render_template("licencias/new_with_persona.jinja2", form=form)
+    return render_template("licencias/new_with_persona_id.jinja2", form=form, persona=persona)
 
 
 @licencias.route("/licencias/edicion/<int:licencia_id>", methods=["GET", "POST"])
@@ -205,19 +210,19 @@ def edit(licencia_id):
         if form.fecha_inicio.data > form.fecha_termino.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de término", "warning")
             return render_template("licencias/edit.jinja2", form=form, licencia=licencia)
-        # TODO: Guardar el historial de puesto.
-        # historial_puesto = HistorialPuesto.query.filter_by(persona=licencia.persona).filter_by(estatus='A')
-        # historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
-        # historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
-        # licencia.puesto_nombre = None
-        # if historial_puesto:
-        #     licencia.puesto_nombre = historial_puesto.puesto_funcion.nombre
+        # Guardar el historial de puesto.
+        historial_puesto = HistorialPuesto.query.filter_by(persona=licencia.persona).filter_by(estatus="A")
+        historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+        historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+        licencia.puesto_nombre = None
+        if historial_puesto:
+            licencia.puesto_nombre = historial_puesto.puesto_funcion.nombre
         licencia.tipo = form.tipo.data
         licencia.fecha_inicio = form.fecha_inicio.data
         licencia.fecha_termino = form.fecha_termino.data
         licencia.con_goce = form.con_goce.data
-        licencia.motivo = safe_string(form.motivo.data)
-        # licencia.save()
+        licencia.motivo = safe_string(form.motivo.data, save_enie=True)
+        licencia.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,

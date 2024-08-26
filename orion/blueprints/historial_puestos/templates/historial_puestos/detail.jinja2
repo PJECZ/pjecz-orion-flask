@@ -1,0 +1,49 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Historial de Puesto{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Historial de Puesto') %}
+        {{ topbar.button_previous('Persona', url_for('personas.detail', persona_id=historial_puesto.persona.id)) }}
+        {% if current_user.can_edit('HISTORIAL PUESTOS') %}
+            {{ topbar.button_edit('Editar', url_for('historial_puestos.edit', historial_puesto_id=historial_puesto.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('HISTORIAL PUESTOS') %}
+            {% if historial_puesto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('historial_puestos.delete', historial_puesto_id=historial_puesto.id)) }}{% endif %}
+            {% if historial_puesto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('historial_puestos.recover', historial_puesto_id=historial_puesto.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=historial_puesto.estatus) %}
+        {{ detail.label_value('Persona', historial_puesto.persona.nombre_completo) }}
+        {{ detail.label_value('Puesto', historial_puesto.puesto_funcion.puesto.clave + ': ' + historial_puesto.puesto_funcion.puesto.nombre) }}
+        {{ detail.label_value('Función', historial_puesto.puesto_funcion.nombre, url_for("puestos_funciones.detail", puesto_funcion_id=historial_puesto.puesto_funcion.id)) }}
+        {{ detail.label_value('Fecha de Inicio', historial_puesto.fecha_inicio) }}
+        {{ detail.label_value('Fecha de Término', historial_puesto.fecha_termino if historial_puesto.fecha_termino != None else "ACTUALMENTE") }}
+        {{ detail.label_value('Centro de Trabajo', historial_puesto.centro_trabajo) }}
+        {{ detail.label_value('Área', historial_puesto.area) }}
+        {{ detail.label_value('Turno', historial_puesto.turno.nombre, url_for("turnos.detail", turno_id=historial_puesto.turno.id)) }}
+        {{ detail.label_value('Nivel', historial_puesto.nivel) }}
+        {{ detail.label_value('Quinquenio', historial_puesto.quinquenio) }}
+        {{ detail.label_value('Nombramiento', historial_puesto.nombramiento) }}
+        {{ detail.label_value('Tipo Nombramiento', historial_puesto.tipo_nombramiento) }}
+        {{ detail.label_value('Nombramiento Observaciones', historial_puesto.nombramiento_observaciones) }}
+    {% endcall %}
+
+    {% call detail.card("Normas") %}
+    <p>TODO: FALTAN: Descripción de norma, fundamento y fragmento</p>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('HISTORIAL PUESTOS') %}
+        {% if historial_puesto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar?') }}{% endif %}
+        {% if historial_puesto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

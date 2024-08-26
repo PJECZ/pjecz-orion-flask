@@ -5,6 +5,7 @@ Puestos, vistas
 import json
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_string, safe_message, safe_clave
@@ -111,11 +112,7 @@ def list_inactive():
 def detail(puesto_id):
     """Detalle de un Puesto"""
     puesto = Puesto.query.get_or_404(puesto_id)
-    return render_template(
-        "puestos/detail.jinja2",
-        puesto=puesto,
-        filtros_puestos_funciones=json.dumps({"estatus": "A", "puesto_id": puesto.id}),
-    )
+    return render_template("puestos/detail.jinja2", puesto=puesto)
 
 
 @puestos.route("/puestos/nuevo", methods=["GET", "POST"])
@@ -221,3 +218,22 @@ def recover(puesto_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("puestos.detail", puesto_id=puesto.id))
+
+
+@puestos.route("/puestos/query_puestos_json", methods=["POST"])
+def query_puestos_json():
+    """Proporcionar el JSON de Puestos para elegir en un Select2"""
+    consulta = Puesto.query.filter_by(estatus="A")
+    if "clave_nombre" in request.form:
+        clave_nombre = safe_string(request.form["clave_nombre"]).upper()
+        if clave_nombre != "":
+            consulta = consulta.filter(or_(Puesto.clave.contains(clave_nombre), Puesto.nombre.contains(clave_nombre)))
+    results = []
+    for puesto in consulta.order_by(Puesto.id).limit(15).all():
+        results.append(
+            {
+                "id": puesto.id,
+                "text": puesto.clave_nombre,
+            }
+        )
+    return {"results": results, "pagination": {"more": False}}

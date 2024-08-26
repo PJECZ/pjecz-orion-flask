@@ -74,11 +74,7 @@ def detail(puesto_funcion_id):
     """Detalle de un Puesto Funcion"""
     puesto_funcion = PuestoFuncion.query.get_or_404(puesto_funcion_id)
     # personas_activas = db.session.query(Persona).join(HistorialPuesto).filter(HistorialPuesto.puesto_funcion_id == puesto_funcion_id).filter(HistorialPuesto.fecha_termino == None).filter(Persona.estatus == "A").limit(100).all()
-    return render_template(
-        "puestos_funciones/detail.jinja2",
-        puesto_funcion=puesto_funcion,
-        filtros_personas=json.dumps({"estatus": "A"}),
-    )
+    return render_template("puestos_funciones/detail.jinja2", puesto_funcion=puesto_funcion)
 
 
 @puestos_funciones.route("/puestos_funciones/nuevo_con_puesto/<int:puesto_id>", methods=["GET", "POST"])
@@ -163,3 +159,24 @@ def recover(puesto_funcion_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("puestos_funciones.detail", puesto_funcion_id=puesto_funcion.id))
+
+
+@puestos_funciones.route("/puestos_funciones/query_puestos_funciones_json", methods=["POST"])
+def query_puestos_funciones_json():
+    """Proporcionar el JSON de Puestos para elegir en un Select2"""
+    consulta = PuestoFuncion.query.filter_by(estatus="A")
+    if "puesto_id" in request.form:
+        consulta = consulta.filter(PuestoFuncion.puesto_id == request.form["puesto_id"])
+    if "nombre" in request.form:
+        nombre = safe_string(request.form["nombre"]).upper()
+        if nombre != "":
+            consulta = consulta.filter(PuestoFuncion.nombre.contains(nombre))
+    results = []
+    for puesto_funcion in consulta.order_by(PuestoFuncion.nombre).limit(15).all():
+        results.append(
+            {
+                "id": puesto_funcion.id,
+                "text": puesto_funcion.nombre,
+            }
+        )
+    return {"results": results, "pagination": {"more": False}}

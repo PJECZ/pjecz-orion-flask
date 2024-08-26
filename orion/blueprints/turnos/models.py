@@ -25,7 +25,7 @@ class Turno(database.Model, UniversalMixin):
     descripcion: Mapped[Optional[str]] = mapped_column(String(64))
 
     # Hijos
-    # historial_puestos = db.relationship("HistorialPuesto", back_populates="turno")
+    historial_puestos: Mapped[List["HistorialPuesto"]] = relationship(back_populates="turno")
 
     def __repr__(self):
         """Representación"""
