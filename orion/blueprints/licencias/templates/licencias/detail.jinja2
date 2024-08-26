@@ -30,6 +30,7 @@
         {{ detail.label_value('Período', licencia.fecha_inicio.strftime("%Y/%m/%d") + ' — ' + licencia.fecha_termino.strftime("%Y/%m/%d")) }}
         {{ detail.label_value('Días', (licencia.fecha_termino - licencia.fecha_inicio).days + 1) }}
         {{ detail.label_value('Motivo', licencia.motivo) }}
+        {{ detail.label_value('Puesto', licencia.puesto_nombre) }}
     {% endcall %}
 {% endblock %}
 
