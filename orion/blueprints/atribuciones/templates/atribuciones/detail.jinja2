@@ -1,0 +1,51 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Atribución {{ atribucion.id }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Atribución ' + atribucion.id  | string) %}
+        {{ topbar.button_previous('Atribuciones', url_for('atribuciones.list_active')) }}
+        {% if current_user.can_edit('ATRIBUCIONES') %}
+            {{ topbar.button_edit('Editar', url_for('atribuciones.edit', atribucion_id=atribucion.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('ATRIBUCIONES') %}
+            {% if atribucion.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('atribuciones.delete', atribucion_id=atribucion.id)) }}{% endif %}
+            {% if atribucion.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('atribuciones.recover', atribucion_id=atribucion.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=atribucion.estatus) %}
+        {% if current_user.can_view("CENTROS TRABAJOS") %}
+            {{ detail.label_value('Centro de Trabajo', atribucion.centro_trabajo.clave_nombre, url_for('centros_trabajos.detail', centro_trabajo_id=atribucion.centro_trabajo.id)) }}
+        {% else %}
+            {{ detail.label_value('Centro de Trabajo', atribucion.centro_trabajo.clave_nombre) }}
+        {% endif %}
+        {% if current_user.can_view("PUESTOS") %}
+            {{ detail.label_value('Puesto', atribucion.funcion.puesto.clave_nombre, url_for('puestos.detail', puesto_id=atribucion.funcion.puesto.id)) }}
+        {% else %}
+            {{ detail.label_value('Puesto', atribucion.funcion.puesto.clave_nombre) }}
+        {% endif %}
+        {% if current_user.can_view("PUESTOS FUNCIONES") %}
+        {{ detail.label_value('Función', atribucion.funcion.nombre, url_for('puestos_funciones.detail', puesto_funcion_id=atribucion.funcion.id)) }}
+        {% else %}
+        {{ detail.label_value('Función', atribucion.funcion.nombre) }}
+        {% endif %}
+        {{ detail.label_value('Tipo de Cargo', atribucion.CARGOS[atribucion.tipo_cargo]) }}
+        {{ detail.label_value('Norma', atribucion.norma) }}
+        {{ detail.label_value('Fundamento', atribucion.fundamento) }}
+        {{ detail.label_value('Fragmento', atribucion.fragmento) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('ATRIBUCIONES') %}
+        {% if atribucion.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar atribución?') }}{% endif %}
+        {% if atribucion.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar atribución?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

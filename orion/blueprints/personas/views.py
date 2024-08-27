@@ -46,6 +46,19 @@ def datatable_json():
             consulta = consulta.filter_by(numero_empleado=numero_empleado)
         except ValueError:
             pass
+    if "nombre_completo" in request.form:
+        nombre_completo = safe_string(request.form["nombre_completo"])
+        if nombre_completo != "":
+            for palabra in nombre_completo.split(" "):
+                consulta = consulta.filter(
+                    or_(
+                        Persona.nombres.contains(palabra),
+                        Persona.apellido_primero.contains(palabra),
+                        Persona.apellido_segundo.contains(palabra),
+                    )
+                )
+    if "situacion" in request.form:
+        consulta = consulta.filter_by(situacion=request.form["situacion"])
     # Luego filtrar por columnas de otras tablas
     # if "persona_rfc" in request.form:
     #     consulta = consulta.join(Persona)
@@ -63,7 +76,10 @@ def datatable_json():
                     "nombre_completo": resultado.nombre_completo,
                     "url": url_for("personas.detail", persona_id=resultado.id),
                 },
-                "situacion": resultado.situacion,
+                "situacion": {
+                    "nombre": resultado.situacion,
+                    "descripcion": Persona.SITUACIONES[resultado.situacion],
+                },
                 "sexo": "HOMBRE" if resultado.sexo == "H" else "MUJER",
             }
         )
@@ -78,6 +94,7 @@ def list_active():
         "personas/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
         titulo="Personas",
+        situaciones=Persona.SITUACIONES,
         estatus="A",
     )
 
@@ -90,6 +107,7 @@ def list_inactive():
         "personas/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
         titulo="Personas inactivos",
+        situaciones=Persona.SITUACIONES,
         estatus="B",
     )
 

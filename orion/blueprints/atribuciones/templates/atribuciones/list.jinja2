@@ -1,0 +1,142 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_admin('ATRIBUCIONES') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('atribuciones.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('atribuciones.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('ATRIBUCIONES') %}
+            {{ topbar.button_new('Nuevo Atribución', url_for('atribuciones.new')) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros atribuciones -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosAtribucion.buscar(); return false;">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroId" type="text" class="form-control" aria-label="Id" style="text-transform: uppercase;">
+                            <label for="filtroId">Id</label>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="form-floating">
+                            <input id="filtroFuncion" type="text" class="form-control" aria-label="Función" style="text-transform: uppercase;">
+                            <label for="filtroFuncion">Función</label>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="form-floating">
+                            <select id="filtroTipo" class="form-control" aria-label="Tipo" onchange="filtrosAtribucion.buscar(); return false;" style="flex: inherit;">
+                                <option selected value=""></option>
+                                {% for clave, valor in tipos_cargos.items() %}
+                                    <option value="{{clave}}">{{valor}}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="filtroTipo">Tipos de Cargos</label>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="form-floating">
+                            <input id="filtroPuesto" type="text" class="form-control" aria-label="Puesto" style="text-transform: uppercase;" disabled>
+                            <label for="filtroPuesto">Puesto</label>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="form-floating">
+                            <input id="filtroCentroTrabajo" type="text" class="form-control" aria-label="CentroTrabajo" style="text-transform: uppercase;">
+                            <label for="filtroCentroTrabajo">Centro de Trabajo</label>
+                        </div>
+                    </div>
+                    <div class="col-2 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosAtribucion.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosAtribucion.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable atribuciones -->
+        <table id="atribuciones_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Función</th>
+                    <th>Tipo de Cargo</th>
+                    <th>Puesto</th>
+                    <th>Centro de Trabajo</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable atribuciones
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDataTable = constructorDataTable.config();
+        configDataTable['ajax']['url'] = '/atribuciones/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: 'detalle' },
+            { data: 'funcion' },
+            { data: 'tipo_cargo' },
+            { data: 'puesto' },
+            { data: 'centro_trabajo' }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
+                }
+            },
+            {
+                targets: 1, // funcion
+                data: null,
+                render: function(data, type, row, meta) {
+                    let texto = data.nombre;
+                    if (texto.length > 16) {
+                        texto = texto.substr(0, 16) + '…';
+                        return '<a href="' + data.url + '"><span title="' + data.nombre + '">' + texto + '</span></a>';
+                    }
+                    return '<a href="' + data.url + '">' + texto + '</a>';
+                }
+            },
+            {
+                targets: 3, // puesto
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '"><span title="' + data.descripcion + '">' + data.texto + '</span></a>';
+                }
+            },
+            {
+                targets: 4, // centro_trabajo
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '"><span title="' + data.descripcion + '">' + data.texto + '</span></a>';
+                }
+            }
+        ];
+        // Filtros atribuciones
+        const filtrosAtribucion = new FiltrosDataTable('#atribuciones_datatable', configDataTable);
+        filtrosAtribucion.agregarInput('filtroId', 'atribucion_id');
+        filtrosAtribucion.agregarInput('filtroFuncion', 'funcion');
+        filtrosAtribucion.agregarInput('filtroTipo', 'tipo');
+        filtrosAtribucion.agregarInput('filtroPuesto', 'puesto');
+        filtrosAtribucion.agregarInput('filtroCentroTrabajo', 'centro_trabajo');
+        filtrosAtribucion.precargar();
+    </script>
+{% endblock %}

@@ -22,16 +22,27 @@
         <div class="row">
             <div class="col">
                 <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPersonas.buscar(); return false;">
-                    <div class="col-4">
+                    <div class="col-2">
                         <div class="form-floating">
                             <input id="filtroNumeroEmpleado" type="text" class="form-control" aria-label="No. Emp.">
                             <label for="filtroNumeroEmpleado">No. Emp.</label>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <div class="form-floating">
                             <input id="filtroNombreCompleto" type="text" class="form-control" aria-label="Nombre completo" style="text-transform: uppercase;">
                             <label for="filtroNombreCompleto">Nombre completo</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <select id="filtroSituacion" class="form-control" aria-label="Situacion" onchange="filtrosPersonas.buscar(); return false;" style="flex: inherit;">
+                                <option selected value=""></option>
+                                {% for clave, valor in situaciones.items() %}
+                                    <option value="{{clave}}">{{valor}}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="filtroSituacion">Situación</label>
                         </div>
                     </div>
                     <div class="col-2 text-end">
@@ -75,12 +86,20 @@
                 render: function(data, type, row, meta) {
                     return '<a href="' + data.url + '">' + data.nombre_completo + '</a>';
                 }
+            },
+            {
+                targets: 2, // situacion
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<span title="' + data.descripcion + '">' + data.nombre + '</span>';
+                }
             }
         ];
         // Filtros Personas
         const filtrosPersonas = new FiltrosDataTable('#personas_datatable', configDataTable);
         filtrosPersonas.agregarInput('filtroNumeroEmpleado', 'numero_empleado');
         filtrosPersonas.agregarInput('filtroNombreCompleto', 'nombre_completo');
+        filtrosPersonas.agregarInput('filtroSituacion', 'situacion');
         filtrosPersonas.precargar();
     </script>
 {% endblock %}

@@ -8,6 +8,7 @@ from redis import Redis
 
 from config.settings import Settings
 from orion.blueprints.areas.views import areas
+from orion.blueprints.atribuciones.views import atribuciones
 from orion.blueprints.bancos.views import bancos
 from orion.blueprints.bitacoras.views import bitacoras
 from orion.blueprints.carreras.views import carreras
@@ -47,6 +48,7 @@ def create_app():
 
     # Registrar blueprints
     app.register_blueprint(areas)
+    app.register_blueprint(atribuciones)
     app.register_blueprint(bancos)
     app.register_blueprint(bitacoras)
     app.register_blueprint(carreras)
