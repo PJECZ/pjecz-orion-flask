@@ -34,9 +34,8 @@ class CentroTrabajo(database.Model, UniversalMixin):
     activo: Mapped[bool] = mapped_column(default=False)
 
     # Hijos
-    # TODO: Conectar Hijos
     areas: Mapped[List["Area"]] = relationship(back_populates="centro_trabajo")
-    # atribuciones = db.relationship("Atribucion", back_populates="centro_trabajo")
+    atribuciones: Mapped[List["Atribucion"]] = relationship(back_populates="centro_trabajo")
 
     @property
     def clave_nombre(self):

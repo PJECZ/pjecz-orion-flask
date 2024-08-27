@@ -1,0 +1,127 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Atribución {{ atribucion.id }}{% endblock %}
+
+{% block custom_head %}
+    <!-- Select2 bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://storage.googleapis.com/pjecz-informatica/static/css/select2.css" rel="stylesheet" />
+{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar Atribución: ' + atribucion.id | string) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'atribucion_id': atribucion.id} %}
+        {% call f.form_tag('atribuciones.edit', fid='atribucion_form', **form_kwargs) %}
+            {% call f.form_group(form.centro_trabajo) %}{% endcall %}
+            {% call f.form_group(form.puesto) %}{% endcall %}
+            {% call f.form_group(form.funcion) %}{% endcall %}
+            {% call f.form_group(form.tipo_cargo) %}{% endcall %}
+            {% call f.form_group(form.norma) %}{% endcall %}
+            {% call f.form_group(form.fundamento) %}{% endcall %}
+            {% call f.form_group(form.fragmento) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+
+{% block custom_javascript %}
+    <!-- Select2 bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Select2 para Centros de Trabajos -->
+    <script>
+        $(document).ready(function() {
+            $('#centro_trabajo').addClass('js-data-example-ajax form-control');
+
+            // --- Carga de la opción elegida --- //
+            const newJuzgadoOption = new Option('{{atribucion.centro_trabajo.clave_nombre}}', '{{atribucion.centro_trabajo.id}}', false, false);
+            $('#centro_trabajo').append(newJuzgadoOption).trigger('change');
+
+            $('#centro_trabajo').select2({
+                // --- Carga de emails por Ajax --- //
+                ajax: {
+                    url: '/centros_trabajos/query_centros_trabajos_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'clave_nombre': params.term.toUpperCase() };
+                    }
+                },
+                placeholder: "Centro de Trabajo",
+                minimumInputLength: 3,
+                allowClear: true
+            });
+        });
+    </script>
+    <!-- Select2 Combo: para Puestos y puestos_funciones -->
+    <script>
+        $(document).ready(function(){
+            $("#puesto").select2({
+                // --- Carga de registros por Ajax --- //
+                ajax: {
+                    url: '/puestos/query_puestos_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'clave_nombre': params.term.toUpperCase() };
+                    }
+                },
+                placeholder: "Clave: Nombre del Puesto",
+                minimumInputLength: 3,
+                allowClear: true
+            });
+            // Seleccionar Centro de Trabajo guardado anteriormente
+            let data = {
+                id: '{{atribucion.funcion.puesto.id}}',
+                text: '{{atribucion.funcion.puesto.clave}}' + ': ' + '{{atribucion.funcion.puesto.nombre}}'
+            };
+            let newOption = new Option(data.text, data.id, false, false);
+            $('#puesto').append(newOption).trigger('change');
+
+            // Seleccionar Área guardado anteriormente
+            let data_2 = {
+                id: '{{atribucion.funcion.id}}',
+                text: '{{atribucion.funcion.nombre}}'
+            };
+            let newOption_2 = new Option(data_2.text, data_2.id, false, false);
+            $('#funcion').append(newOption_2).trigger('change');
+        });
+
+        $('#puesto').on("select2:clear", function (e) {
+            $('#funcion').val(null).trigger('change');
+            $('#funcion').prop("disabled", true);
+        });
+
+        $('#puesto').on("select2:select", function (e) {
+            $('#funcion').prop("disabled", false);
+            $("#funcion").select2({
+                ajax: {
+                    url: '/puestos_funciones/query_puestos_funciones_json',
+                    headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        if(params.term == undefined) {
+                            return {  'puesto_id':  $('#puesto').val() }
+                        }
+                        return { 'nombre': params.term.toUpperCase(), 'puesto_id':  $('#puesto').val() };
+                    }
+                },
+                placeholder: "Funciones",
+                allowClear: false,
+            });
+            $('#funcion').val(null).trigger('change');
+        });
+    </script>
+{% endblock %}
