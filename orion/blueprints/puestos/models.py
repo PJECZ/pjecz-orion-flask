@@ -47,6 +47,7 @@ class Puesto(database.Model, UniversalMixin):
     )
 
     # Hijos
+    # TODO: Conectar Hijos
     puestos_funciones: Mapped[List["PuestoFuncion"]] = relationship(back_populates="puesto")
     # personas_meritos = db.relationship("PersonaMerito", back_populates="puesto")
     # personas_escalafones_del_cargo_de = db.relationship("PersonaEscalafon", foreign_keys="PersonaEscalafon.del_cargo_de_id")
