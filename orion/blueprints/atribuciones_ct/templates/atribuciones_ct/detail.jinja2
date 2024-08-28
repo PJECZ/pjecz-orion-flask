@@ -9,7 +9,7 @@
     {% call topbar.page_buttons('Atribución CT ' + atribucion_ct.id | string ) %}
         {{ topbar.button_previous('Atribuciones CT', url_for('atribuciones_ct.list_active')) }}
         {% if current_user.can_edit('ATRIBUCIONES CT') %}
-            {# {{ topbar.button_edit('Editar', url_for('atribuciones_ct.edit', atribucion_ct_id=atribucion_ct.id)) }} #}
+            {{ topbar.button_edit('Editar', url_for('atribuciones_ct.edit', atribucion_ct_id=atribucion_ct.id)) }}
         {% endif %}
         {% if current_user.can_admin('ATRIBUCIONES CT') %}
             {% if atribucion_ct.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('atribuciones_ct.delete', atribucion_ct_id=atribucion_ct.id)) }}{% endif %}

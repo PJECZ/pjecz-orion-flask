@@ -144,7 +144,41 @@ def new():
     return render_template("atribuciones_ct/new.jinja2", form=form)
 
 
-# EDIT TODO:
+@atribuciones_ct.route("/atribuciones_ct/edicion/<int:atribucion_ct_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(atribucion_ct_id):
+    """Editar Atribución CT"""
+    atribucion_ct = AtribucionCT.query.get_or_404(atribucion_ct_id)
+    form = AtribucionCTForm()
+    if form.validate_on_submit():
+        # Revisar si ya existe la relación de CT y área asiganda.
+        if (
+            AtribucionCT.query.filter(AtribucionCT.area_id == form.area.data)
+            .filter(AtribucionCT.id != atribucion_ct_id)
+            .first()
+            is not None
+        ):
+            flash("Esta Área ya se encuentra asiganada.", "warning")
+            return render_template("atribuciones_ct/edit.jinja2", form=form, atribucion_ct=atribucion_ct)
+        # Guardar cambios
+        atribucion_ct.area_id = form.area.data
+        atribucion_ct.norma = safe_string(form.norma.data, save_enie=True)
+        atribucion_ct.fundamento = safe_string(form.fundamento.data, save_enie=True)
+        atribucion_ct.fragmento = safe_string(form.fragmento.data, save_enie=True)
+        atribucion_ct.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Atribución CT {atribucion_ct.norma}"),
+            url=url_for("atribuciones_ct.detail", atribucion_ct_id=atribucion_ct.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.norma.data = atribucion_ct.norma
+    form.fundamento.data = atribucion_ct.fundamento
+    form.fragmento.data = atribucion_ct.fragmento
+    return render_template("atribuciones_ct/edit.jinja2", form=form, atribucion_ct=atribucion_ct)
 
 
 @atribuciones_ct.route("/atribuciones_ct/eliminar/<int:atribucion_ct_id>")
