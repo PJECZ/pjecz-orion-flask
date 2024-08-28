@@ -11,7 +11,7 @@
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('atribuciones_ct.list_active')) }}{% endif %}
         {% endif %}
         {% if current_user.can_insert('ATRIBUCIONES CT') %}
-            {# {{ topbar.button_new('Nuevo Atribución CT', url_for('atribuciones_ct.new')) }} #}
+            {{ topbar.button_new('Nueva Atribución CT', url_for('atribuciones_ct.new')) }}
         {% endif %}
     {% endcall %}
 {% endblock %}

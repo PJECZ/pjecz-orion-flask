@@ -16,6 +16,7 @@ from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.atribuciones_ct.models import AtribucionCT
 from orion.blueprints.areas.models import Area
 from orion.blueprints.centros_trabajos.models import CentroTrabajo
+from orion.blueprints.atribuciones_ct.forms import AtribucionCTForm
 
 MODULO = "ATRIBUCIONES CT"
 
@@ -113,7 +114,35 @@ def detail(atribucion_ct_id):
     return render_template("atribuciones_ct/detail.jinja2", atribucion_ct=atribucion_ct)
 
 
-# NEW TODO:
+@atribuciones_ct.route("/atribuciones_ct/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Atribución CT"""
+    form = AtribucionCTForm()
+    if form.validate_on_submit():
+        # Revisar si ya existe la relación de CT y área asignada.
+        if AtribucionCT.query.filter(AtribucionCT.area_id == form.area.data).first() is not None:
+            flash("Esta Área ya se encuentra asignada.", "warning")
+            return render_template("atribuciones_ct/new.jinja2", form=form)
+        # Guardar Registro
+        atribucion = AtribucionCT(
+            area_id=form.area.data,
+            norma=safe_string(form.norma.data, save_enie=True),
+            fundamento=safe_string(form.fundamento.data, save_enie=True),
+            fragmento=safe_string(form.fragmento.data, save_enie=True),
+        )
+        atribucion.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Atribución CT {atribucion.id}"),
+            url=url_for("atribuciones_ct.detail", atribucion_id=atribucion.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("atribuciones_ct/new.jinja2", form=form)
+
 
 # EDIT TODO:
 
