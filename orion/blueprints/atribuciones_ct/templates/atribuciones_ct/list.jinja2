@@ -1,0 +1,111 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_admin('ATRIBUCIONES CT') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('atribuciones_ct.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('atribuciones_ct.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('ATRIBUCIONES CT') %}
+            {# {{ topbar.button_new('Nuevo Atribución CT', url_for('atribuciones_ct.new')) }} #}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros atribuciones_ct -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosAtribucionesCT.buscar(); return false;">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroId" type="text" class="form-control" aria-label="Id" style="text-transform: uppercase;">
+                            <label for="filtroId">Id</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroCentroTrabajo" type="text" class="form-control" aria-label="Centro de Trabajo" style="text-transform: uppercase;">
+                            <label for="filtroCentroTrabajo">Centro de Trabajo</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroArea" type="text" class="form-control" aria-label="Área" style="text-transform: uppercase;">
+                            <label for="filtroArea">Área</label>
+                        </div>
+                    </div>
+                    <div class="col-2 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosAtribucionesCT.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosAtribucionesCT.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable atribuciones_ct -->
+        <table id="atribuciones_ct_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Centro de Trabajo</th>
+                    <th>Área</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable atribuciones_ct
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDataTable = constructorDataTable.config();
+        configDataTable['ajax']['url'] = '/atribuciones_ct/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: 'detalle' },
+            { data: 'centro_trabajo' },
+            { data: 'area' }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
+                }
+            },
+            {
+                targets: 1, // centro_trabajo
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '"><span title="' + data.nombre + '">' + data.clave + '</span></a>';
+                }
+            },
+            {
+                targets: 2, // area
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.nombre.length > 64) {
+                        texto_corto = data.nombre.substr(0, 64) + '…';
+                        return '<a href="' + data.url + '"><span title="' + data.nombre + '">' + texto_corto + '</span></a>';
+                    }
+                    return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                }
+            }
+        ];
+        // Filtros atribuciones_ct
+        const filtrosAtribucionesCT = new FiltrosDataTable('#atribuciones_ct_datatable', configDataTable);
+        filtrosAtribucionesCT.agregarInput('filtroId', 'atribucion_ct_id');
+        filtrosAtribucionesCT.agregarInput('filtroCentroTrabajo', 'centro_trabajo');
+        filtrosAtribucionesCT.agregarInput('filtroArea', 'area');
+        filtrosAtribucionesCT.precargar();
+    </script>
+{% endblock %}

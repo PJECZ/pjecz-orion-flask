@@ -28,8 +28,7 @@ class Area(database.Model, UniversalMixin):
     nombre: Mapped[str] = mapped_column(String(128), unique=True)
 
     # Hijos
-    # TODO: Conectar Hijos
-    # atribuciones_ct = db.relationship("AtribucionCT", back_populates="area")
+    atribuciones_ct: Mapped[List["AtribucionCT"]] = relationship(back_populates="area")
 
     def __repr__(self):
         """Representación"""
