@@ -1,0 +1,43 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Incapacidad {{ incapacidad.id }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Incapacidad ' + incapacidad.id | string) %}
+        {{ topbar.button_previous('Incapacidades', url_for('incapacidades.list_active')) }}
+        {% if current_user.can_edit('INCAPACIDADES') %}
+            {# {{ topbar.button_edit('Editar', url_for('incapacidades.edit', incapacidad_id=incapacidad.id)) }} #}
+        {% endif %}
+        {% if current_user.can_admin('INCAPACIDADES') %}
+            {% if incapacidad.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('incapacidades.delete', incapacidad_id=incapacidad.id)) }}{% endif %}
+            {% if incapacidad.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('incapacidades.recover', incapacidad_id=incapacidad.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=incapacidad.estatus) %}
+        {% if current_user.can_view('PERSONAS') %}
+            {{ detail.label_value('Persona', incapacidad.persona.nombre_completo, url_for('personas.detail', persona_id=incapacidad.persona.id)) }}
+        {% else %}
+            {{ detail.label_value('Persona', incapacidad.persona.nombre_completo) }}
+        {% endif %}
+        {{ detail.label_value('Período', incapacidad.fecha_inicio.strftime("%Y/%m/%d") + ' — ' + incapacidad.fecha_termino.strftime("%Y/%m/%d")) }}
+        {{ detail.label_value('Días', (incapacidad.fecha_termino - incapacidad.fecha_inicio).days + 1) }}
+        {{ detail.label_value('Clave Incapacidad', incapacidad.clave_incapacidad) }}
+        {{ detail.label_value('Region', incapacidad.region) }}
+        {{ detail.label_value('Motivo', incapacidad.motivo) }}
+        {{ detail.label_value('Puesto', incapacidad.puesto_nombre) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('INCAPACIDADES') %}
+        {% if incapacidad.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar incapacidad de ' + incapacidad.persona.nombre_completo + '?') }}{% endif %}
+        {% if incapacidad.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar incapacidad de ' + incapacidad.persona.nombre_completo + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

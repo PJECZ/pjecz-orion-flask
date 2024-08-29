@@ -48,7 +48,7 @@ def datatable_json():
     if "fecha_termino" in request.form:
         consulta = consulta.filter(Licencia.fecha_termino <= request.form["fecha_termino"])
     if "tipo" in request.form:
-        consulta = consulta.filter_by(tipo=request.form["tipo"])
+        consulta = consulta.filter(Licencia.tipo == request.form["tipo"])
     # Luego filtrar por columnas de otras tablas
     if "persona_nombre_completo" in request.form:
         nombre_completo = safe_string(request.form["persona_nombre_completo"])
