@@ -30,6 +30,7 @@
     {% endcall %}
     {% call detail.card("Acciones") %}
         <a href="{{url_for('licencias.new_with_persona_id', persona_id=persona.id)}}" class="btn btn-primary">Agregar Licencia</a>
+        <a href="{{url_for('incapacidades.new_with_persona_id', persona_id=persona.id)}}" class="btn btn-primary">Agregar Incapacidad</a>
     {% endcall %}
     <!-- Ver historial de puestos -->
     {% if current_user.can_view("HISTORIAL PUESTOS") %}

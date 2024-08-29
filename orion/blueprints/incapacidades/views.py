@@ -16,6 +16,8 @@ from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.incapacidades.models import Incapacidad
 from orion.blueprints.personas.models import Persona
+from orion.blueprints.incapacidades.forms import IncapacidadForm, IncapacidadWithPersonaForm
+from orion.blueprints.historial_puestos.models import HistorialPuesto
 
 MODULO = "INCAPACIDADES"
 
@@ -114,7 +116,109 @@ def detail(incapacidad_id):
     return render_template("incapacidades/detail.jinja2", incapacidad=incapacidad)
 
 
-# NEW TODO:
+@incapacidades.route("/incapacidades/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Incapacidad"""
+    form = IncapacidadForm()
+    if form.validate_on_submit():
+        # Validar fecha
+        if form.fecha_termino.data < form.fecha_inicio.data:
+            flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
+            return render_template("incapacidades/new.jinja2", form=form)
+        # Validar registro repetido
+        registro_repetido = (
+            Incapacidad.query.filter_by(persona_id=form.persona.data)
+            .filter_by(fecha_inicio=form.fecha_inicio.data)
+            .filter_by(fecha_termino=form.fecha_termino.data)
+            .filter_by(estatus="A")
+            .first()
+        )
+        if registro_repetido:
+            flash("Esta persona ya tiene una incapacidad en la misma fecha de inicio y término.", "warning")
+            return render_template("incapacidades/new.jinja2", form=form)
+        # Buscar puesto en historial de puestos
+        puesto_nombre = None
+        historial_puesto = HistorialPuesto.query.filter_by(persona_id=form.persona.data).filter_by(estatus="A")
+        historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+        historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+        if historial_puesto:
+            puesto_nombre = historial_puesto.puesto_funcion.nombre
+        # Guardar registro
+        incapacidad = Incapacidad(
+            persona_id=form.persona.data,
+            fecha_inicio=form.fecha_inicio.data,
+            fecha_termino=form.fecha_termino.data,
+            clave_incapacidad=safe_string(form.clave_incapacidad.data),
+            region=form.region.data,
+            motivo=safe_string(form.motivo.data, save_enie=True),
+            puesto_nombre=puesto_nombre,
+        )
+        incapacidad.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Incapacidad {incapacidad.persona.nombre_completo}"),
+            url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("incapacidades/new.jinja2", form=form)
+
+
+@incapacidades.route("/incapacidades/nuevo_con_persona/<int:persona_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_persona_id(persona_id):
+    """Nuevo Incapacidad"""
+    persona = Persona.query.get_or_404(persona_id)
+    form = IncapacidadWithPersonaForm()
+    if form.validate_on_submit():
+        # Validar fecha
+        if form.fecha_termino.data < form.fecha_inicio.data:
+            flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
+            return render_template("incapacidades/new_with_persona_id.jinja2", form=form, persona=persona)
+        # Validar registro repetido
+        registro_repetido = (
+            Incapacidad.query.filter_by(persona=persona)
+            .filter_by(fecha_inicio=form.fecha_inicio.data)
+            .filter_by(fecha_termino=form.fecha_termino.data)
+            .filter_by(estatus="A")
+            .first()
+        )
+        if registro_repetido:
+            flash("Esta persona ya tiene una incapacidad en la misma fecha de inicio y término.", "warning")
+            return render_template("incapacidades/new_with_persona_id.jinja2", form=form, persona=persona)
+        # Buscar puesto en historial de puestos
+        puesto_nombre = None
+        historial_puesto = HistorialPuesto.query.filter_by(persona=persona).filter_by(estatus="A")
+        historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+        historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+        if historial_puesto:
+            puesto_nombre = historial_puesto.puesto_funcion.nombre
+        # Guardar registro
+        incapacidad = Incapacidad(
+            persona=persona,
+            fecha_inicio=form.fecha_inicio.data,
+            fecha_termino=form.fecha_termino.data,
+            clave_incapacidad=safe_string(form.clave_incapacidad.data),
+            region=form.region.data,
+            motivo=safe_string(form.motivo.data, save_enie=True),
+            puesto_nombre=puesto_nombre,
+        )
+        incapacidad.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Incapacidad {incapacidad.persona.nombre_completo}"),
+            url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.persona.data = persona.nombre_completo
+    return render_template("incapacidades/new_with_persona_id.jinja2", form=form, persona=persona)
+
 
 # EDIT TODO:
 

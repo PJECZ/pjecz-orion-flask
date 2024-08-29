@@ -11,7 +11,7 @@
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('incapacidades.list_active')) }}{% endif %}
         {% endif %}
         {% if current_user.can_insert('INCAPACIDADES') %}
-            {# {{ topbar.button_new('Nuevo Incapacidad', url_for('incapacidades.new')) }} #}
+            {{ topbar.button_new('Nueva Incapacidad', url_for('incapacidades.new')) }}
         {% endif %}
     {% endcall %}
 {% endblock %}

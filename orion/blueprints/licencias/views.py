@@ -130,7 +130,7 @@ def new():
             flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
             return render_template("licencias/new.jinja2", form=form)
         # Leer el historial de puestos para extraer el nombre del puesto en esa fecha.
-        historial_puesto = HistorialPuesto.query.filter_by(persona=form.persona.data).filter_by(estatus="A")
+        historial_puesto = HistorialPuesto.query.filter_by(persona_id=form.persona.data).filter_by(estatus="A")
         historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
         historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
         puesto_nombre = None
