@@ -9,7 +9,7 @@
     {% call topbar.page_buttons('Incapacidad ' + incapacidad.id | string) %}
         {{ topbar.button_previous('Incapacidades', url_for('incapacidades.list_active')) }}
         {% if current_user.can_edit('INCAPACIDADES') %}
-            {# {{ topbar.button_edit('Editar', url_for('incapacidades.edit', incapacidad_id=incapacidad.id)) }} #}
+            {{ topbar.button_edit('Editar', url_for('incapacidades.edit', incapacidad_id=incapacidad.id)) }}
         {% endif %}
         {% if current_user.can_admin('INCAPACIDADES') %}
             {% if incapacidad.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('incapacidades.delete', incapacidad_id=incapacidad.id)) }}{% endif %}

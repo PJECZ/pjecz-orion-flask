@@ -220,7 +220,63 @@ def new_with_persona_id(persona_id):
     return render_template("incapacidades/new_with_persona_id.jinja2", form=form, persona=persona)
 
 
-# EDIT TODO:
+@incapacidades.route("/incapacidades/edicion/<int:incapacidad_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(incapacidad_id):
+    """Editar Incapacidad"""
+    incapacidad = Incapacidad.query.get_or_404(incapacidad_id)
+    form = IncapacidadWithPersonaForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Validar fecha
+        if form.fecha_termino.data < form.fecha_inicio.data:
+            flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
+            es_valido = False
+        # Validar registro repetido
+        registro_repetido = (
+            Incapacidad.query.filter_by(persona=incapacidad.persona)
+            .filter_by(fecha_inicio=form.fecha_inicio.data)
+            .filter_by(fecha_termino=form.fecha_termino.data)
+            .filter_by(estatus="A")
+            .filter(Incapacidad.id != incapacidad_id)
+            .first()
+        )
+        if registro_repetido:
+            flash("Esta persona ya tiene una incapacidad en la misma fecha de inicio y término.", "warning")
+            es_valido = False
+        if es_valido:
+            # Buscar puesto en historial de puestos
+            puesto_nombre = None
+            historial_puesto = HistorialPuesto.query.filter_by(persona=incapacidad.persona).filter_by(estatus="A")
+            historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+            historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+            if historial_puesto:
+                puesto_nombre = historial_puesto.puesto_funcion.nombre
+            # Guardar cambios
+            incapacidad.fecha_inicio = form.fecha_inicio.data
+            incapacidad.fecha_termino = form.fecha_termino.data
+            incapacidad.clave_incapacidad = form.clave_incapacidad.data
+            incapacidad.region = form.region.data
+            incapacidad.motivo = safe_string(form.motivo.data, save_enie=True)
+            incapacidad.puesto = puesto_nombre
+            incapacidad.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Incapacidad {incapacidad.motivo}"),
+                url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    # Cargar valores leidos
+    form.persona.data = incapacidad.persona.nombre_completo
+    form.fecha_inicio.data = incapacidad.fecha_inicio
+    form.fecha_termino.data = incapacidad.fecha_termino
+    form.clave_incapacidad.data = incapacidad.clave_incapacidad
+    form.region.data = incapacidad.region
+    form.motivo.data = incapacidad.motivo
+    return render_template("incapacidades/edit.jinja2", form=form, incapacidad=incapacidad)
 
 
 @incapacidades.route("/incapacidades/eliminar/<int:incapacidad_id>")
