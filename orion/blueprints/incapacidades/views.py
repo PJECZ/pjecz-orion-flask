@@ -60,6 +60,9 @@ def datatable_json():
                         Persona.apellido_segundo.contains(palabra),
                     )
                 )
+    if "persona_id" in request.form:
+        consulta = consulta.join(Persona)
+        consulta = consulta.filter(Persona.id == request.form["persona_id"])
     # Ordenar y paginar
     registros = consulta.order_by(Incapacidad.fecha_inicio.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()

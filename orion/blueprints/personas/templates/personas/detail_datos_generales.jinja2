@@ -1,0 +1,48 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+{% import 'macros/list.jinja2' as list %}
+
+{% block title %}Persona {{ persona.nombre_completo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Persona ' + persona.nombre_completo) %}
+        {{ topbar.button_previous('Personas', url_for('personas.list_active')) }}
+        {# if current_user.can_edit('PERSONAS') %}
+            {{ topbar.button_edit('Editar', url_for('personas.edit', persona_id=persona.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('PERSONAS') %}
+            {% if persona.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('personas.delete', persona_id=persona.id)) }}{% endif %}
+            {% if persona.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('personas.recover', persona_id=persona.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card('Datos Generales', estatus=persona.estatus) %}
+        {{ detail.label_value('No. Emp.', persona.numero_empleado) }}
+        {{ detail.label_value('R.F.C.', persona.rfc) }}
+        {{ detail.label_value('C.U.R.P.', persona.curp) }}
+        {{ detail.label_value_big('Situación', persona.situacion) }}
+    {% endcall %}
+    <!-- Menú de secciones -->
+    <div class="btn-group btn-group-sm mb-3" role="group">
+        <a id="btn_datos_personales" href="#" class="btn btn-outline-primary">Datos Personales</a>
+        <a id="btn_archivos_adjuntos" href="#" class="btn btn-outline-primary">Archivos Adjuntos</a>
+        <a id="btn_domicilios" href="#" class="btn btn-outline-primary">Domicilios</a>
+        <a id="btn_historial_academico" href="#" class="btn btn-outline-primary">Historial Académico</a>
+        <a id="btn_historial_puestos" href="{{url_for('personas.detail_section', seccion='historial_puestos', persona_id=persona.id)}}" class="btn btn-outline-primary">Historial de Puestos</a>
+        <a id="btn_incapacidades" href="{{url_for('personas.detail_section', seccion='incapacidades', persona_id=persona.id)}}" class="btn btn-outline-primary">Incapacidades</a>
+        <a id="btn_licencias" href="#" class="btn btn-outline-primary">Licencias</a>
+        <a id="btn_nombramientos" href="#" class="btn btn-outline-primary">Nombramientos</a>
+    </div>
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('PERSONAS') %}
+        {% if persona.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + persona.nombre_completo + '?') }}{% endif %}
+        {% if persona.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + persona.nombre_completo + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

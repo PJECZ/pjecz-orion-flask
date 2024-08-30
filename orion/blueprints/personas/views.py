@@ -119,6 +119,14 @@ def detail(persona_id):
     return render_template("personas/detail.jinja2", persona=persona)
 
 
+@personas.route("/personas/<string:seccion>/<int:persona_id>")
+def detail_section(seccion, persona_id):
+    """Detalle de un Persona"""
+    persona = Persona.query.get_or_404(persona_id)
+    seccion_page = f"personas/detail_{seccion}.jinja2"
+    return render_template(seccion_page, persona=persona)
+
+
 @personas.route("/personas/query_personas_json", methods=["POST"])
 def query_personas_json():
     """Proporcionar el JSON de Persona para elegir en un Select2"""
