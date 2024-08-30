@@ -1,0 +1,97 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Atribución CT {{ atribucion_ct.id }}{% endblock %}
+
+{% block custom_head %}
+    <!-- Select2 bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://storage.googleapis.com/pjecz-informatica/static/css/select2.css" rel="stylesheet" />
+{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar ' + atribucion_ct.id | string) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'atribucion_ct_id': atribucion_ct.id} %}
+        {% call f.form_tag('atribuciones_ct.edit', fid='atribucion_ct_form', **form_kwargs) %}
+            {% call f.form_group(form.centro_trabajo) %}{% endcall %}
+            {% call f.form_group(form.area) %}{% endcall %}
+            {% call f.form_group(form.norma) %}{% endcall %}
+            {% call f.form_group(form.fundamento) %}{% endcall %}
+            {% call f.form_group(form.fragmento) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+
+{% block custom_javascript %}
+    <!-- Select2 bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Select2 combo: Centro de Trabajo y Áreas -->
+    <script>
+    $(document).ready(function () {
+        $("#centro_trabajo").select2({
+            ajax: {
+                url: '/centros_trabajos/query_centros_trabajos_json',
+                headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                dataType: 'json',
+                delay: 250,
+                type: "POST",
+                data: function (params) {
+                    return { 'clave_nombre': params.term.toUpperCase() };
+                }
+            },
+            placeholder: "Clave: Nombre del Centro de Trabajo",
+            minimumInputLength: 3,
+            allowClear: true
+        });
+         // Seleccionar Centro de Trabajo guardado anteriormente
+        let data = {
+            id: '{{atribucion_ct.area.centro_trabajo.id}}',
+            text: '{{atribucion_ct.area.centro_trabajo.clave}}' + ': ' + '{{atribucion_ct.area.centro_trabajo.nombre}}'
+        };
+        let newOption = new Option(data.text, data.id, false, false);
+        $('#centro_trabajo').append(newOption).trigger('change');
+
+        // Seleccionar Área guardado anteriormente
+        let data_area = {
+            id: '{{atribucion_ct.area.id}}',
+            text: '{{atribucion_ct.area.nombre}}'
+        };
+        let newOption_area = new Option(data_area.text, data_area.id, false, false);
+        $('#area').append(newOption_area).trigger('change');
+    });
+
+    $('#centro_trabajo').on("select2:clear", function (e) {
+        $('#area').val(null).trigger('change');
+        $('#area').prop("disabled", true);
+    });
+
+    $('#centro_trabajo').on("select2:select", function (e) {
+        $('#area').prop("disabled", false);
+        $("#area").select2({
+            ajax: {
+                url: '/areas/query_areas_json',
+                headers: { 'X-CSRF-TOKEN': "{{ csrf_token() }}" },
+                dataType: 'json',
+                delay: 250,
+                type: "POST",
+                data: function (params) {
+                    if(params.term == undefined) {
+                        return {  'centro_trabajo_id':  $('#centro_trabajo').val() }
+                    }
+                    return { 'nombre': params.term.toUpperCase(), 'centro_trabajo_id':  $('#centro_trabajo').val() };
+                }
+            },
+            placeholder: "Areas",
+            allowClear: false,
+        });
+        $('#area').val(null).trigger('change');
+    });
+    </script>
+{% endblock %}

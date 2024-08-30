@@ -1,0 +1,46 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Atribución CT {{ atribucion_ct.id }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Atribución CT ' + atribucion_ct.id | string ) %}
+        {{ topbar.button_previous('Atribuciones CT', url_for('atribuciones_ct.list_active')) }}
+        {% if current_user.can_edit('ATRIBUCIONES CT') %}
+            {{ topbar.button_edit('Editar', url_for('atribuciones_ct.edit', atribucion_ct_id=atribucion_ct.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('ATRIBUCIONES CT') %}
+            {% if atribucion_ct.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('atribuciones_ct.delete', atribucion_ct_id=atribucion_ct.id)) }}{% endif %}
+            {% if atribucion_ct.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('atribuciones_ct.recover', atribucion_ct_id=atribucion_ct.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=atribucion_ct.estatus) %}
+        {{ detail.label_value_big('ID', atribucion_ct.id) }}
+        {% if current_user.can_view('CENTROS TRABAJOS') %}
+            {{ detail.label_value('Centro de Trabajo', atribucion_ct.area.centro_trabajo.clave_nombre, url_for('centros_trabajos.detail', centro_trabajo_id=atribucion_ct.area.centro_trabajo.id)) }}
+        {% else %}
+            {{ detail.label_value('Centro de Trabajo', atribucion_ct.area.centro_trabajo.clave_nombre) }}
+        {% endif %}
+        {% if current_user.can_view('AREAS') %}
+            {{ detail.label_value('Área', atribucion_ct.area.nombre, url_for('areas.detail', area_id=atribucion_ct.area.id)) }}
+        {% else %}
+            {{ detail.label_value('Área', atribucion_ct.area.nombre) }}
+        {% endif %}
+        {{ detail.label_value('Norma', atribucion_ct.norma) }}
+        {{ detail.label_value('Fundamento', atribucion_ct.fundamento) }}
+        {{ detail.label_value('Fragmento', atribucion_ct.fragmento) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('ATRIBUCIONES CT') %}
+        {% if atribucion_ct.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar la atribución ' + atribucion_ct.id | string + '?') }}{% endif %}
+        {% if atribucion_ct.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar la atribución ' + atribucion_ct.id | string + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}
