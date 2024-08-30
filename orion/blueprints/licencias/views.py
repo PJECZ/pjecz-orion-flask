@@ -48,7 +48,7 @@ def datatable_json():
     if "fecha_termino" in request.form:
         consulta = consulta.filter(Licencia.fecha_termino <= request.form["fecha_termino"])
     if "tipo" in request.form:
-        consulta = consulta.filter_by(tipo=request.form["tipo"])
+        consulta = consulta.filter(Licencia.tipo == request.form["tipo"])
     # Luego filtrar por columnas de otras tablas
     if "persona_nombre_completo" in request.form:
         nombre_completo = safe_string(request.form["persona_nombre_completo"])
@@ -130,7 +130,7 @@ def new():
             flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
             return render_template("licencias/new.jinja2", form=form)
         # Leer el historial de puestos para extraer el nombre del puesto en esa fecha.
-        historial_puesto = HistorialPuesto.query.filter_by(persona=form.persona.data).filter_by(estatus="A")
+        historial_puesto = HistorialPuesto.query.filter_by(persona_id=form.persona.data).filter_by(estatus="A")
         historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
         historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
         puesto_nombre = None
