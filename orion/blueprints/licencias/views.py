@@ -49,6 +49,8 @@ def datatable_json():
         consulta = consulta.filter(Licencia.fecha_termino <= request.form["fecha_termino"])
     if "tipo" in request.form:
         consulta = consulta.filter(Licencia.tipo == request.form["tipo"])
+    if "persona_id" in request.form:
+        consulta = consulta.filter(Licencia.persona_id == request.form["persona_id"])
     # Luego filtrar por columnas de otras tablas
     if "persona_nombre_completo" in request.form:
         nombre_completo = safe_string(request.form["persona_nombre_completo"])
@@ -82,6 +84,7 @@ def datatable_json():
                     "nombre": resultado.persona.nombre_completo,
                     "url": url_for("personas.detail", persona_id=resultado.persona.id),
                 },
+                "motivo": resultado.motivo,
             }
         )
     # Entregar JSON
