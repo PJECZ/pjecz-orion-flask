@@ -1,0 +1,24 @@
+{% extends 'personas/detail_datos_generales.jinja2' %}
+
+{% block content %}
+    {{ super() }}
+    <!-- Ver Datos Personales -->
+    {# {% if current_user.can_view("DATOS PERSONALES") %} #}
+        {% call detail.card('Datos Académicos') %}
+            {{ detail.label_value('Nivel de Estudios', persona.ESTUDIOS[persona.nivel_estudios]) }}
+            {{ detail.label_value('Nivel Máximo de Estudios', persona.nivel_estudios_max.nombre, url_for('niveles_academicos.detail', nivel_academico_id=persona.nivel_estudios_max.id)) }}
+            {{ detail.label_value('Carrera', persona.carrera.nombre, url_for('carreras.detail', carrera_id=persona.carrera.id)) }}
+            {{ detail.label_value('Cédula Profesional', persona.cedula_profesional) }}
+        {% endcall %}
+    {# {% endif %} #}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ super() }}
+    <!-- Activar btn de seccion -->
+    <script>
+        const boton = document.getElementById('btn_historial_academico');
+        boton.classList.add('active');
+        boton.href = "{{url_for('personas.detail', persona_id=persona.id)}}";
+    </script>
+{% endblock %}

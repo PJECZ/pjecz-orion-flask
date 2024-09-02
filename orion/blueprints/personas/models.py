@@ -106,13 +106,15 @@ class Persona(database.Model, UniversalMixin):
     estado_civil: Mapped[str] = mapped_column(
         Enum(*ESTADOS_CIVILES, name="personas_estados_civiles", native_enum=False), index=True
     )
-    madre: Mapped[bool] = mapped_column(default=False)  # TODO: Cmabiar a es_madre
-    # TODO: Declarar columnas restantes
-    # nivel_estudios = db.Column(db.Enum(*OrderedDict(ESTUDIOS), name="nivel_estudios", native_enum=False), index=False, nullable=True)
-    # cedula_profesional = db.Column(db.String(16))
-    # observaciones = db.Column(db.String(512))
-    # observaciones_especiales = db.Column(db.String(512))
+    madre: Mapped[bool] = mapped_column(default=False)  # TODO: Cambiar a es_madre
+    nivel_estudios: Mapped[Optional[str]] = mapped_column(
+        Enum(*ESTUDIOS, name="personas_nivel_estudios", native_enum=False), index=False
+    )
+    cedula_profesional: Mapped[Optional[str]] = mapped_column(String(16))
+    observaciones: Mapped[Optional[str]] = mapped_column(String(512))
+    observaciones_especiales: Mapped[Optional[str]] = mapped_column(String(512))
 
+    # TODO: Declarar columnas restantes
     # Domicilio Fiscal
     # domicilio_fiscal_calle = db.Column(db.String(128))
     # domicilio_fiscal_numero_exterior = db.Column(db.String(16))
@@ -124,7 +126,7 @@ class Persona(database.Model, UniversalMixin):
     # domicilio_fiscal_cp = db.Column(db.Integer)
 
     # Datos Extra
-    # fecha_baja = db.Column(db.Date)
+    fecha_baja: Mapped[date]
     falta_papeleria: Mapped[bool] = mapped_column(default=False)
 
     # Hijos
