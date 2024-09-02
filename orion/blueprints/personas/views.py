@@ -3,6 +3,8 @@ Personas, vistas
 """
 
 import json
+import locale
+from datetime import date
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -64,7 +66,7 @@ def datatable_json():
     #     consulta = consulta.join(Persona)
     #     consulta = consulta.filter(Persona.rfc.contains(safe_rfc(request.form["persona_rfc"], search_fragment=True)))
     # Ordenar y paginar
-    registros = consulta.order_by(Persona.id).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(Persona.modificado.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []
@@ -115,6 +117,7 @@ def list_inactive():
 @personas.route("/personas/<int:persona_id>")
 def detail(persona_id):
     """Detalle de un Persona"""
+    locale.setlocale(locale.LC_TIME, "es_MX")
     persona = Persona.query.get_or_404(persona_id)
     return render_template("personas/detail.jinja2", persona=persona)
 
@@ -122,9 +125,15 @@ def detail(persona_id):
 @personas.route("/personas/<string:seccion>/<int:persona_id>")
 def detail_section(seccion, persona_id):
     """Detalle de un Persona"""
+    locale.setlocale(locale.LC_TIME, "es_MX")
     persona = Persona.query.get_or_404(persona_id)
     seccion_page = f"personas/detail_{seccion}.jinja2"
-    return render_template(seccion_page, persona=persona)
+    # Calculo de edad para la sección de Datos Personales
+    edad = 0
+    if persona.fecha_nacimiento:
+        edad = date.today() - persona.fecha_nacimiento
+        edad = int(edad.days / 365)
+    return render_template(seccion_page, persona=persona, edad=edad)
 
 
 @personas.route("/personas/query_personas_json", methods=["POST"])

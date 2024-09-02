@@ -32,7 +32,7 @@
     <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
-    {% if current_user.can_view("HISTORIAL PUESTOS") %}
+    {% if current_user.can_view("LICENCIAS") %}
         <script>
             // DataTable Licencias
             const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );

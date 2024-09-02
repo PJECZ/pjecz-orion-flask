@@ -1,0 +1,34 @@
+{% extends 'personas/detail_datos_generales.jinja2' %}
+
+{% block content %}
+    {{ super() }}
+    <!-- Ver Datos Personales -->
+    {# {% if current_user.can_view("DATOS PERSONALES") %} #}
+        {% call detail.card('Datos Personales') %}
+            {{ detail.label_value('Fecha de ingreso a Gobierno del Estado', persona.fecha_ingreso_gobierno) }}
+            {{ detail.label_value('Fecha de ingreso al PJ', persona.fecha_ingreso_pj) }}
+            {{ detail.label_value('Núm. Seguridad Social', persona.num_seguridad_social) }}
+            <hr />
+            {% if persona.madre %}
+                {{ detail.label_value_boolean('Es Madre', persona.madre) }}
+            {% endif %}
+            {{ detail.label_value('Estado Civil', persona.ESTADOS_CIVILES[persona.estado_civil]) }}
+            {% set edad_str = edad | string() %}
+            {{ detail.label_value('Fecha de nacimiento', persona.fecha_nacimiento.strftime("%-d de %B de %Y") + ' (' +
+            edad_str + ' años)') }}
+            {{ detail.label_value('email secundario', persona.email_secundario) }}
+            {{ detail.label_value('Teléfono personal', persona.telefono_personal) }}
+            {{ detail.label_value('Teléfono de su domicilio', persona.telefono_domicilio) }}
+        {% endcall %}
+    {# {% endif %} #}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ super() }}
+    <!-- Activar btn de seccion -->
+    <script>
+        const boton = document.getElementById('btn_datos_personales');
+        boton.classList.add('active');
+        boton.href = "{{url_for('personas.detail', persona_id=persona.id)}}";
+    </script>
+{% endblock %}
