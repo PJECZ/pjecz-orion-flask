@@ -28,7 +28,7 @@ class Domicilio(database.Model, UniversalMixin):
     num_ext: Mapped[str] = mapped_column(String(16))
     num_int: Mapped[str] = mapped_column(String(16))
     colonia: Mapped[str] = mapped_column(String(256))
-    cp: Mapped[str] = mapped_column(String(5))
+    cp: Mapped[str] = mapped_column(String(5), default="00000")
     completo: Mapped[str] = mapped_column(String(1024))
 
     # Hijos

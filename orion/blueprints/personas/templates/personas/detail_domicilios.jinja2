@@ -13,8 +13,10 @@
             {{ detail.label_value('Estado', domicilio.estado) }}
             {{ detail.label_value('País', domicilio.pais) }}
             {{ detail.label_value('CP', domicilio.cp) }}
-            <hr />
-            <a class="btn btn-warning" href="#">Editar</a>
+            {% if current_user.can_edit('DOMICILIOS') %}
+                <hr />
+                <a class="btn btn-warning" href="{{url_for('domicilios.edit', persona_id=persona.id , domicilio_id=domicilio.id)}}">Editar</a>
+            {% endif %}
         {% endcall %}
         <!-- Domicilio Fiscal -->
         {% call detail.card('Domicilio Fiscal') %}
@@ -26,8 +28,10 @@
             {{ detail.label_value('Estado', persona.domicilio_fiscal_estado) }}
             {{ detail.label_value('Localidad', persona.domicilio_fiscal_localidad) }}
             {{ detail.label_value('CP', persona.domicilio_fiscal_cp) }}
-            <hr />
-            <a class="btn btn-warning" href="{{url_for('personas.edit_domicilio_fiscal', persona_id=persona.id)}}">Editar</a>
+            {% if current_user.can_edit('DOMICILIOS') %}
+                <hr />
+                <a class="btn btn-warning" href="{{url_for('personas.edit_domicilio_fiscal', persona_id=persona.id)}}">Editar</a>
+            {% endif %}
         {% endcall %}
     {% endif %}
 {% endblock %}
