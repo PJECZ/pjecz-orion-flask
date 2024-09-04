@@ -1,0 +1,43 @@
+{% extends 'personas/detail_datos_generales.jinja2' %}
+
+{% block content %}
+    {{ super() }}
+    <!-- Ver Datos Personales -->
+    {% if current_user.can_view("DOMICILIOS") %}
+        {% call detail.card('Domicilio Personal') %}
+            {{ detail.label_value('Calle', domicilio.calle) }}
+            {{ detail.label_value('Núm. Ext.', domicilio.num_ext) }}
+            {{ detail.label_value('Núm. Int.', domicilio.num_int) }}
+            {{ detail.label_value('Colonia', domicilio.colonia) }}
+            {{ detail.label_value('Municipio', domicilio.municipio) }}
+            {{ detail.label_value('Estado', domicilio.estado) }}
+            {{ detail.label_value('País', domicilio.pais) }}
+            {{ detail.label_value('CP', domicilio.cp) }}
+            <hr />
+            <a class="btn btn-warning" href="#">Editar</a>
+        {% endcall %}
+        <!-- Domicilio Fiscal -->
+        {% call detail.card('Domicilio Fiscal') %}
+            {{ detail.label_value('Calle', persona.domicilio_fiscal_calle) }}
+            {{ detail.label_value('Núm. Ext.', persona.domicilio_fiscal_numero_exterior) }}
+            {{ detail.label_value('Núm. Int.', persona.domicilio_fiscal_numero_interior) }}
+            {{ detail.label_value('Colonia', persona.domicilio_fiscal_colonia) }}
+            {{ detail.label_value('Municipio', persona.domicilio_fiscal_municipio) }}
+            {{ detail.label_value('Estado', persona.domicilio_fiscal_estado) }}
+            {{ detail.label_value('Localidad', persona.domicilio_fiscal_localidad) }}
+            {{ detail.label_value('CP', persona.domicilio_fiscal_cp) }}
+            <hr />
+            <a class="btn btn-warning" href="{{url_for('personas.edit_domicilio_fiscal', persona_id=persona.id)}}">Editar</a>
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ super() }}
+    <!-- Activar btn de seccion -->
+    <script>
+        const boton = document.getElementById('btn_domicilios');
+        boton.classList.add('active');
+        boton.href = "{{url_for('personas.detail', persona_id=persona.id)}}";
+    </script>
+{% endblock %}

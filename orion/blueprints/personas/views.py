@@ -17,6 +17,8 @@ from orion.blueprints.modulos.models import Modulo
 from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.personas.models import Persona
 from orion.blueprints.usuarios.decorators import permission_required
+from orion.blueprints.personas_domicilios.models import PersonaDomicilio
+from orion.blueprints.personas.forms import PersonaEditDomicilioFiscalForm
 
 MODULO = "PERSONAS"
 
@@ -133,7 +135,47 @@ def detail_section(seccion, persona_id):
     if persona.fecha_nacimiento:
         edad = date.today() - persona.fecha_nacimiento
         edad = int(edad.days / 365)
+    if seccion == "domicilios":
+        persona_domicilio = PersonaDomicilio.query.filter_by(persona_id=persona_id).first()
+        return render_template(seccion_page, persona=persona, domicilio=persona_domicilio.domicilio)
     return render_template(seccion_page, persona=persona, edad=edad)
+
+
+@personas.route("/personas/edicion_domicilio_fiscal/<int:persona_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit_domicilio_fiscal(persona_id):
+    """Editar Domicilio Fiscal de una Persona"""
+    persona = Persona.query.get_or_404(persona_id)
+    form = PersonaEditDomicilioFiscalForm()
+    if form.validate_on_submit():
+        persona.domicilio_fiscal_calle = safe_string(form.calle.data, save_enie=True)
+        persona.domicilio_fiscal_numero_exterior = safe_string(form.numero_exterior.data)
+        persona.domicilio_fiscal_numero_interior = safe_string(form.numero_interior.data)
+        persona.domicilio_fiscal_colonia = safe_string(form.colonia.data, save_enie=True)
+        persona.domicilio_fiscal_municipio = safe_string(form.municipio.data, save_enie=True)
+        persona.domicilio_fiscal_estado = safe_string(form.estado.data, save_enie=True)
+        persona.domicilio_fiscal_localidad = safe_string(form.localidad.data, save_enie=True)
+        persona.domicilio_fiscal_cp = form.codigo_postal.data
+        persona.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Domicilio Fiscal de una Persona {persona.nombre_completo}"),
+            url=url_for("personas.detail", persona_id=persona.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(url_for("personas.detail_section", seccion="domicilios", persona_id=persona_id))
+    form.persona.data = persona.nombre_completo
+    form.calle.data = persona.domicilio_fiscal_calle
+    form.numero_exterior.data = persona.domicilio_fiscal_numero_exterior
+    form.numero_interior.data = persona.domicilio_fiscal_numero_interior
+    form.colonia.data = persona.domicilio_fiscal_colonia
+    form.municipio.data = persona.domicilio_fiscal_municipio
+    form.estado.data = persona.domicilio_fiscal_estado
+    form.localidad.data = persona.domicilio_fiscal_localidad
+    form.codigo_postal.data = persona.domicilio_fiscal_cp
+    return render_template("personas/edit_domicilio_fiscal.jinja2", form=form, persona=persona)
 
 
 @personas.route("/personas/query_personas_json", methods=["POST"])

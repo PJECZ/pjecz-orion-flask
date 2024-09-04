@@ -1,0 +1,27 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Domicilio Fiscal {{ persona.nombre_completo }}{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar Domicilio Fiscal de: ' + persona.nombre_completo) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'persona_id': persona.id} %}
+        {% call f.form_tag('personas.edit_domicilio_fiscal', fid='persona_form', **form_kwargs) %}
+            {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.calle) %}{% endcall %}
+            {% call f.form_group(form.numero_exterior) %}{% endcall %}
+            {% call f.form_group(form.numero_interior) %}{% endcall %}
+            {% call f.form_group(form.colonia) %}{% endcall %}
+            {% call f.form_group(form.municipio) %}{% endcall %}
+            {% call f.form_group(form.estado) %}{% endcall %}
+            {% call f.form_group(form.localidad) %}{% endcall %}
+            {% call f.form_group(form.codigo_postal) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
