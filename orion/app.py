@@ -16,6 +16,7 @@ from orion.blueprints.carreras.views import carreras
 from orion.blueprints.centros_trabajos.views import centros_trabajos
 from orion.blueprints.distritos.views import distritos
 from orion.blueprints.entradas_salidas.views import entradas_salidas
+from orion.blueprints.historial_academicos.views import historial_academicos
 from orion.blueprints.historial_puestos.views import historial_puestos
 from orion.blueprints.incapacidades.views import incapacidades
 from orion.blueprints.licencias.views import licencias
@@ -58,6 +59,7 @@ def create_app():
     app.register_blueprint(centros_trabajos)
     app.register_blueprint(distritos)
     app.register_blueprint(entradas_salidas)
+    app.register_blueprint(historial_academicos)
     app.register_blueprint(historial_puestos)
     app.register_blueprint(incapacidades)
     app.register_blueprint(licencias)

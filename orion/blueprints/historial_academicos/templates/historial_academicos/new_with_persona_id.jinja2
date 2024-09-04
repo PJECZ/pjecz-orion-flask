@@ -1,0 +1,24 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nuevo Historial Académico{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Nuevo Historial Académico') }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'persona_id': persona.id} %}
+        {% call f.form_tag('historial_academicos.new_with_persona_id', fid='historial_academico_form', **form_kwargs) %}
+            {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.nivel_academico) %}{% endcall %}
+            {% call f.form_group(form.nombre_escuela) %}{% endcall %}
+            {% call f.form_group(form.nombre_ciudad) %}{% endcall %}
+            {% call f.form_group(form.ano_inicio) %}{% endcall %}
+            {% call f.form_group(form.ano_termino) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}

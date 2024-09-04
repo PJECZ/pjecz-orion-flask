@@ -25,12 +25,11 @@ class NivelAcademico(database.Model, UniversalMixin):
     nombre: Mapped[str] = mapped_column(String(64))
 
     # Hijos
-    # TODO: Conectar con hijos
     personas: Mapped[List["Persona"]] = relationship("Persona", back_populates="nivel_estudios_max")
-    # historial_academicos = db.relationship("HistorialAcademico", back_populates="nivel_academico")
+    historial_academicos: Mapped[List["HistorialAcademico"]] = relationship(back_populates="nivel_academico")
 
     @property
-    def nombre_completo(self):
+    def clave_nombre(self):
         """Junta la clave y el nombre"""
         return self.clave + ": " + self.nombre
 
