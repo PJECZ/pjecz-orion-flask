@@ -5,17 +5,21 @@
     <!-- Ver Datos Personales -->
     {% if current_user.can_view("DOMICILIOS") %}
         {% call detail.card('Domicilio Personal') %}
-            {{ detail.label_value('Calle', domicilio.calle) }}
-            {{ detail.label_value('Núm. Ext.', domicilio.num_ext) }}
-            {{ detail.label_value('Núm. Int.', domicilio.num_int) }}
-            {{ detail.label_value('Colonia', domicilio.colonia) }}
-            {{ detail.label_value('Municipio', domicilio.municipio) }}
-            {{ detail.label_value('Estado', domicilio.estado) }}
-            {{ detail.label_value('País', domicilio.pais) }}
-            {{ detail.label_value('CP', domicilio.cp) }}
-            {% if current_user.can_edit('DOMICILIOS') %}
-                <hr />
-                <a class="btn btn-warning" href="{{url_for('domicilios.edit', persona_id=persona.id , domicilio_id=domicilio.id)}}">Editar</a>
+            {% if domicilio %}
+                {{ detail.label_value('Calle', domicilio.calle) }}
+                {{ detail.label_value('Núm. Ext.', domicilio.num_ext) }}
+                {{ detail.label_value('Núm. Int.', domicilio.num_int) }}
+                {{ detail.label_value('Colonia', domicilio.colonia) }}
+                {{ detail.label_value('Municipio', domicilio.municipio) }}
+                {{ detail.label_value('Estado', domicilio.estado) }}
+                {{ detail.label_value('País', domicilio.pais) }}
+                {{ detail.label_value('CP', domicilio.cp) }}
+                {% if current_user.can_edit('DOMICILIOS') %}
+                    <hr />
+                    <a class="btn btn-warning" href="{{url_for('domicilios.edit', persona_id=persona.id , domicilio_id=domicilio.id)}}">Editar</a>
+                {% endif %}
+            {% else %}
+                <a class="btn btn-primary" href="{{url_for('domicilios.new_with_persona_id', persona_id=persona.id)}}">Nuevo</a>
             {% endif %}
         {% endcall %}
         <!-- Domicilio Fiscal -->

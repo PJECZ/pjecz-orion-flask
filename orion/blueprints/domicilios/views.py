@@ -16,6 +16,7 @@ from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.domicilios.models import Domicilio
 from orion.blueprints.domicilios.forms import DomicilioForm
 from orion.blueprints.personas.models import Persona
+from orion.blueprints.personas_domicilios.models import PersonaDomicilio
 
 MODULO = "DOMICILIOS"
 
@@ -44,6 +45,42 @@ def detail_with_persona_id(persona_id):
 
 
 # NEW TODO:
+@domicilios.route("/domicilios/nuevo_con_persona/<int:persona_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_persona_id(persona_id):
+    """Nuevo Domicilio"""
+    persona = Persona.query.get_or_404(persona_id)
+    form = DomicilioForm()
+    if form.validate_on_submit():
+        domicilio = Domicilio(
+            calle=safe_string(form.calle.data, save_enie=True),
+            num_ext=safe_string(form.numero_exterior.data),
+            num_int=safe_string(form.numero_interior.data),
+            colonia=safe_string(form.colonia.data, save_enie=True),
+            municipio=safe_string(form.municipio.data, save_enie=True),
+            estado=safe_string(form.estado.data, save_enie=True),
+            pais=safe_string(form.pais.data, save_enie=True),
+            cp=form.codigo_postal.data,
+            completo="",
+        )
+        domicilio.save()
+        # Crear la relación de muchos a muchos
+        PersonaDomicilio(
+            persona=persona,
+            domicilio=domicilio,
+        ).save()
+        # Guardar en bitacora
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Domicilio {domicilio.calle}"),
+            url=url_for("domicilios.detail", domicilio_id=domicilio.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(url_for("personas.detail_section", seccion="domicilios", persona_id=persona.id))
+    form.persona.data = persona.nombre_completo
+    return render_template("domicilios/new_with_persona_id.jinja2", form=form, persona=persona)
 
 
 @domicilios.route("/domicilios/edicion/<int:persona_id>/<int:domicilio_id>", methods=["GET", "POST"])

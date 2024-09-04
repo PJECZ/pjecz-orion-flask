@@ -137,7 +137,9 @@ def detail_section(seccion, persona_id):
         edad = int(edad.days / 365)
     if seccion == "domicilios":
         persona_domicilio = PersonaDomicilio.query.filter_by(persona_id=persona_id).first()
-        return render_template(seccion_page, persona=persona, domicilio=persona_domicilio.domicilio)
+        if persona_domicilio:
+            return render_template(seccion_page, persona=persona, domicilio=persona_domicilio.domicilio)
+        return render_template(seccion_page, persona=persona, domicilio=None)
     return render_template(seccion_page, persona=persona, edad=edad)
 
 
