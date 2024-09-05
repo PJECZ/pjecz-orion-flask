@@ -5,6 +5,7 @@ Personas Nombramientos, vistas
 import json
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from werkzeug.datastructures import CombinedMultiDict
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_string, safe_message
@@ -14,10 +15,23 @@ from orion.blueprints.modulos.models import Modulo
 from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.personas_nombramientos.models import PersonaNombramiento
+from orion.blueprints.personas_nombramientos.forms import PersonaNombramientoForm
+
+from lib.exceptions import (
+    MyAnyError,
+    MyFilenameError,
+    MyMissingConfigurationError,
+    MyNotAllowedExtensionError,
+    MyUnknownExtensionError,
+)
+from lib.storage import GoogleCloudStorage
+
 
 MODULO = "PERSONAS NOMBRAMIENTOS"
 
 personas_nombramientos = Blueprint("personas_nombramientos", __name__, template_folder="templates")
+
+SUBDIRECTORIO = "nombramientos"
 
 
 @personas_nombramientos.before_request
@@ -76,7 +90,105 @@ def detail(persona_nombramiento_id):
 
 # TODO: NEW_WITH_PERSONA_ID
 
-# TODO: EDIT
+
+@personas_nombramientos.route("/personas_nombramientos/edicion/<int:persona_nombramiento_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(persona_nombramiento_id):
+    """Editar Nombramiento"""
+    nombramiento = PersonaNombramiento.query.get_or_404(persona_nombramiento_id)
+    form = PersonaNombramientoForm(CombinedMultiDict((request.files, request.form)))
+    if form.validate_on_submit():
+        es_valido = True
+        # Validar fecha
+        if form.fecha_inicio.data > form.fecha_termino.data:
+            flash(f"La fecha de inicio no puede ser mayor a la fecha de término.", "warning")
+            es_valido = False
+        if es_valido:
+            if request.files["archivo"].filename == "":
+                # Guardar cambios sin modificar el archivo
+                nombramiento.cargo = safe_string(form.cargo.data)
+                nombramiento.centro_trabajo = safe_string(form.centro_trabajo.data)
+                nombramiento.tipo = safe_string(form.tipo.data)
+                nombramiento.fecha_inicio = form.fecha_inicio.data
+                nombramiento.fecha_termino = form.fecha_termino.data
+                nombramiento.save()
+                # Salida en bitacora
+                bitacora = Bitacora(
+                    modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                    usuario=current_user,
+                    descripcion=safe_message(f"Editado Nombramiento {nombramiento.id}"),
+                    url=url_for("personas_nombramientos.detail", persona_nombramiento_id=nombramiento.id),
+                )
+                bitacora.save()
+                flash(bitacora.descripcion, "success")
+                return redirect(bitacora.url)
+            else:
+                # Guardar cambios modificando el archivo adjunto
+                # Validar archivo
+                archivo = request.files["archivo"]
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+                try:
+                    storage.set_content_type(archivo.filename)
+                except MyNotAllowedExtensionError:
+                    flash("Tipo de archivo no permitido.", "warning")
+                    es_valido = False
+                except MyUnknownExtensionError:
+                    flash("Tipo de archivo desconocido.", "warning")
+                    es_valido = False
+                if es_valido:
+                    # Eliminar y crear un nuevo registro para el rempalzo
+                    nombramiento.delete()
+                    nombramiento_new = PersonaNombramiento(
+                        persona=nombramiento.persona,
+                        cargo=safe_string(form.cargo.data),
+                        centro_trabajo=safe_string(form.centro_trabajo.data),
+                        tipo=safe_string(form.tipo.data),
+                        fecha_inicio=form.fecha_inicio.data,
+                        fecha_termino=form.fecha_termino.data,
+                    )
+                    nombramiento_new.save()
+                    # Subir a Google Cloud Storage
+                    es_exitoso = True
+                    try:
+                        storage.set_filename(hashed_id=nombramiento_new.encode_id(), description="NOMBRAMIENTO")
+                        storage.upload(archivo.stream.read())
+                    except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
+                        flash("Error fatal al subir el archivo a GCS.", "warning")
+                        es_exitoso = False
+                    except MyMissingConfigurationError:
+                        flash("Error al subir el archivo porque falla la configuración de GCS.", "danger")
+                        es_exitoso = False
+                    except Exception:
+                        flash("Error desconocido al subir el archivo.", "danger")
+                        es_exitoso = False
+                    # Remplazar archivo
+                    if es_exitoso:
+                        nombramiento_new.archivo = storage.filename
+                        nombramiento_new.url = storage.url
+                        nombramiento_new.save()
+                        # Salida en bitacora
+                        bitacora = Bitacora(
+                            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                            usuario=current_user,
+                            descripcion=safe_message(
+                                f"Editado Nombramiento {nombramiento_new.id}, se dio de baja {nombramiento.id}"
+                            ),
+                            url=url_for("personas_nombramientos.detail", persona_nombramiento_id=nombramiento_new.id),
+                        )
+                        bitacora.save()
+                        flash(bitacora.descripcion, "success")
+                        return redirect(bitacora.url)
+                    else:
+                        nombramiento_new.delete()
+                        nombramiento.recover()
+                        return redirect(url_for("personas_nombramientos.detail", persona_nombramiento_id=nombramiento.id))
+    form.persona.data = nombramiento.persona.nombre_completo
+    form.cargo.data = nombramiento.cargo
+    form.centro_trabajo.data = nombramiento.centro_trabajo
+    form.tipo.data = nombramiento.tipo
+    form.fecha_inicio.data = nombramiento.fecha_inicio
+    form.fecha_termino.data = nombramiento.fecha_termino
+    return render_template("personas_nombramientos/edit.jinja2", form=form, persona_nombramiento=nombramiento)
 
 
 @personas_nombramientos.route("/personas_nombramientos/eliminar/<int:persona_nombramiento_id>")
