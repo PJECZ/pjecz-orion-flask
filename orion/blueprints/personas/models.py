@@ -114,20 +114,19 @@ class Persona(database.Model, UniversalMixin):
     observaciones: Mapped[Optional[str]] = mapped_column(String(512))
     observaciones_especiales: Mapped[Optional[str]] = mapped_column(String(512))
 
-    # TODO: Declarar columnas restantes
     # Domicilio Fiscal
-    # domicilio_fiscal_calle = db.Column(db.String(128))
-    # domicilio_fiscal_numero_exterior = db.Column(db.String(16))
-    # domicilio_fiscal_numero_interior = db.Column(db.String(16))
-    # domicilio_fiscal_colonia = db.Column(db.String(64))
-    # domicilio_fiscal_localidad = db.Column(db.String(64))
-    # domicilio_fiscal_municipio = db.Column(db.String(64))
-    # domicilio_fiscal_estado = db.Column(db.String(64))
-    # domicilio_fiscal_cp = db.Column(db.Integer)
+    domicilio_fiscal_calle: Mapped[Optional[str]] = mapped_column(String(128))
+    domicilio_fiscal_numero_exterior: Mapped[Optional[str]] = mapped_column(String(16))
+    domicilio_fiscal_numero_interior: Mapped[Optional[str]] = mapped_column(String(16))
+    domicilio_fiscal_colonia: Mapped[Optional[str]] = mapped_column(String(64))
+    domicilio_fiscal_localidad: Mapped[Optional[str]] = mapped_column(String(64))
+    domicilio_fiscal_municipio: Mapped[Optional[str]] = mapped_column(String(64))
+    domicilio_fiscal_estado: Mapped[Optional[str]] = mapped_column(String(64))
+    domicilio_fiscal_cp: Mapped[Optional[int]]
 
     # Datos Extra
-    fecha_baja: Mapped[date]
-    falta_papeleria: Mapped[bool] = mapped_column(default=False)
+    fecha_baja: Mapped[Optional[date]]
+    falta_papeleria: Mapped[Optional[bool]] = mapped_column(default=False)
 
     # Hijos
     # TODO: Conectar hijos
@@ -136,6 +135,7 @@ class Persona(database.Model, UniversalMixin):
     # cursos = db.relationship("PersonaCurso", back_populates="persona")
     # familiares = db.relationship("PersonaFamiliar", back_populates="persona")
     # personas_domicilios = db.relationship("PersonaDomicilio", back_populates="persona")
+    personas_domicilios: Mapped[List["PersonaDomicilio"]] = relationship(back_populates="persona")
     # personas_enfermedades = db.relationship("PersonaEnfermedad", back_populates="persona")
     historial_puestos: Mapped[List["HistorialPuesto"]] = relationship(back_populates="persona")
     historial_academicos: Mapped[List["HistorialAcademico"]] = relationship(back_populates="persona")

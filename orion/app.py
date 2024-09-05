@@ -15,6 +15,7 @@ from orion.blueprints.bitacoras.views import bitacoras
 from orion.blueprints.carreras.views import carreras
 from orion.blueprints.centros_trabajos.views import centros_trabajos
 from orion.blueprints.distritos.views import distritos
+from orion.blueprints.domicilios.views import domicilios
 from orion.blueprints.entradas_salidas.views import entradas_salidas
 from orion.blueprints.historial_academicos.views import historial_academicos
 from orion.blueprints.historial_puestos.views import historial_puestos
@@ -25,6 +26,7 @@ from orion.blueprints.niveles_academicos.views import niveles_academicos
 from orion.blueprints.organos.views import organos
 from orion.blueprints.permisos.views import permisos
 from orion.blueprints.personas.views import personas
+from orion.blueprints.personas_domicilios.views import personas_domicilios
 from orion.blueprints.puestos.views import puestos
 from orion.blueprints.puestos_funciones.views import puestos_funciones
 from orion.blueprints.roles.views import roles
@@ -58,6 +60,7 @@ def create_app():
     app.register_blueprint(carreras)
     app.register_blueprint(centros_trabajos)
     app.register_blueprint(distritos)
+    app.register_blueprint(domicilios)
     app.register_blueprint(entradas_salidas)
     app.register_blueprint(historial_academicos)
     app.register_blueprint(historial_puestos)
@@ -68,6 +71,7 @@ def create_app():
     app.register_blueprint(organos)
     app.register_blueprint(permisos)
     app.register_blueprint(personas)
+    app.register_blueprint(personas_domicilios)
     app.register_blueprint(puestos)
     app.register_blueprint(puestos_funciones)
     app.register_blueprint(roles)
