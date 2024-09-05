@@ -86,7 +86,7 @@
         <a id="btn_historial_puestos" href="{{url_for('personas.detail_section', seccion='historial_puestos', persona_id=persona.id)}}" class="btn btn-outline-primary">Historial de Puestos</a>
         <a id="btn_incapacidades" href="{{url_for('personas.detail_section', seccion='incapacidades', persona_id=persona.id)}}" class="btn btn-outline-primary">Incapacidades</a>
         <a id="btn_licencias" href="{{url_for('personas.detail_section', seccion='licencias', persona_id=persona.id)}}" class="btn btn-outline-primary">Licencias</a>
-        <a id="btn_nombramientos" href="#" class="btn btn-outline-primary disabled">Nombramientos</a>
+        <a id="btn_nombramientos" href="{{url_for('personas.detail_section', seccion='personas_nombramientos', persona_id=persona.id)}}" class="btn btn-outline-primary">Nombramientos</a>
     </div>
 {% endblock %}
 

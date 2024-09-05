@@ -1,0 +1,61 @@
+{% extends 'personas/detail_datos_generales.jinja2' %}
+
+{% block content %}
+    {{ super() }}
+    <!-- Ver Nombramientos -->
+    {% if current_user.can_view("PERSONAS NOMBRAMIENTOS") %}
+    {% call detail.card("Listado de Nombramientos") %}
+        <!-- DataTable Nombramientos -->
+        <table id="nombramientos_datatable" class="table display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Período</th>
+                    <th>Cargo</th>
+                    <th>Centro de Trabajo</th>
+                </tr>
+            </thead>
+        </table>
+        {# TODO: BTN para nuevo #}
+        {# <a href="{{url_for('personas_nombramientos.new_with_persona_id', persona_id=persona.id)}}" class="btn btn-primary">Agregar Licencia</a> #}
+    {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ super() }}
+    <!-- Activar btn de seccion -->
+    <script>
+        const boton = document.getElementById('btn_nombramientos');
+        boton.classList.add('active');
+        boton.href = "{{url_for('personas.detail', persona_id=persona.id)}}";
+    </script>
+    <!-- DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    {% if current_user.can_view("PERSONAS NOMBRAMIENTOS") %}
+        <script>
+            // DataTable Licencias
+            const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+            let configDataTable = constructorDataTable.config();
+            configDataTable['ajax']['url'] = '/personas_nombramientos/datatable_json';
+            configDataTable['ajax']['data'] = {"estatus": "A", "persona_id": {{ persona.id }}};
+            configDataTable['columns'] = [
+                { data: 'detalle' },
+                { data: 'cargo' },
+                { data: 'centro_trabajo' }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.periodo + '</a>';
+                    }
+                }
+            ];
+            // Filtros Licencias
+            const filtrosLicencias = new FiltrosDataTable('#nombramientos_datatable', configDataTable);
+            filtrosLicencias.precargar();
+        </script>
+    {% endif %}
+{% endblock %}
