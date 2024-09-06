@@ -150,7 +150,7 @@ class Persona(database.Model, UniversalMixin):
     # personas_actas_administrativas = db.relationship("PersonaActaAdministrativa", back_populates="persona")
     # personas_procedimientos_diciplinarios = db.relationship("PersonaProcedimientoDiciplinario", back_populates="persona")
     # personas_escalafones = db.relationship("PersonaEscalafon", back_populates="persona")
-    # adjuntos = db.relationship("PersonaAdjunto", back_populates="persona")
+    adjuntos: Mapped[List["PersonaAdjunto"]] = relationship(back_populates="persona")
     nombramientos: Mapped[List["PersonaNombramiento"]] = relationship(back_populates="persona")
 
     @property
