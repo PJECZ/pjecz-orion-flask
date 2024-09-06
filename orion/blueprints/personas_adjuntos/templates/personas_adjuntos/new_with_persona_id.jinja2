@@ -1,0 +1,33 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nuevo Archivo Adjunto{% endblock %}
+
+{% block custom_head %}
+    {{ f.drop_zone_css() }}
+{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Nuevo Archivo Adjunto') }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'persona_id': persona.id} %}
+        {% call f.form_tag_multipart('personas_adjuntos.new_with_persona_id', fid='adjunto_form', **form_kwargs) %}
+            {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.tipo) %}{% endcall %}
+            {% call f.form_group(form.descripcion) %}{% endcall %}
+            {% call f.drop_zone_wrapper() %}
+                {% call f.form_group(form.archivo, class="dropzone") %}{% endcall %}
+            {% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+
+{% block custom_javascript %}
+    {{ f.drop_zone_js() }}
+{% endblock %}

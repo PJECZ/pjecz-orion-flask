@@ -1,0 +1,58 @@
+{% extends 'personas/detail_datos_generales.jinja2' %}
+
+{% block content %}
+    {{ super() }}
+    <!-- Ver Archivos Adjuntos -->
+    {% if current_user.can_view("PERSONAS ADJUNTOS") %}
+    {% call detail.card("Listado de Archivos Adjuntos") %}
+        <!-- DataTable Adjuntos -->
+        <table id="adjuntos_datatable" class="table display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+        </table>
+        <a href="{{url_for('personas_adjuntos.new_with_persona_id', persona_id=persona.id)}}" class="btn btn-primary">Agregar Archivo Adjunto</a>
+    {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ super() }}
+    <!-- Activar btn de seccion -->
+    <script>
+        const boton = document.getElementById('btn_adjuntos');
+        boton.classList.add('active');
+        boton.href = "{{url_for('personas.detail', persona_id=persona.id)}}";
+    </script>
+    <!-- DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    {% if current_user.can_view("PERSONAS ADJUNTOS") %}
+        <script>
+            // DataTable Personas Adjuntos
+            const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+            let configDataTable = constructorDataTable.config();
+            configDataTable['ajax']['url'] = '/personas_adjuntos/datatable_json';
+            configDataTable['ajax']['data'] = {"estatus": "A", "persona_id": {{ persona.id }}};
+            configDataTable['columns'] = [
+                { data: 'detalle' },
+                { data: 'descripcion' }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.tipo + '</a>';
+                    }
+                }
+            ];
+            // Filtros Licencias
+            const filtrosLicencias = new FiltrosDataTable('#adjuntos_datatable', configDataTable);
+            filtrosLicencias.precargar();
+        </script>
+    {% endif %}
+{% endblock %}

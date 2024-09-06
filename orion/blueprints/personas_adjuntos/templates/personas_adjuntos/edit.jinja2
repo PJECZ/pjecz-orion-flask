@@ -1,0 +1,42 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+{% import 'macros/detail.jinja2' as detail %}
+
+{% block title %}Editar Archivo Adjunto {{ persona_adjunto.id }}{% endblock %}
+
+{% block custom_head %}
+    {{ f.drop_zone_css() }}
+{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar ' + persona_adjunto.id | string) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'persona_adjunto_id': persona_adjunto.id} %}
+        {% call f.form_tag_multipart('personas_adjuntos.edit', fid='persona_adjunto_form', **form_kwargs) %}
+            {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.tipo) %}{% endcall %}
+            {% call f.form_group(form.descripcion) %}{% endcall %}
+            {% call f.drop_zone_wrapper() %}
+                {% call f.form_group(form.archivo, class="dropzone") %}{% endcall %}
+            {% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+    {% call detail.card("Vista previa del archivo") %}
+        {% if persona_adjunto.type_format(persona_adjunto.archivo) == "IMG" %}
+            <a href="{{ persona_adjunto.url }}"><img src="{{ persona_adjunto.url }}" style="max-width: 500px; height: auto;"/></a>
+        {% endif %}
+        {% if persona_adjunto.type_format(persona_adjunto.archivo) == "PDF" %}
+            <object data="{{ persona_adjunto.url }}" type="application/pdf" width="100%" height="600"></object>
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+
+{% block custom_javascript %}
+    {{ f.drop_zone_js() }}
+{% endblock %}
