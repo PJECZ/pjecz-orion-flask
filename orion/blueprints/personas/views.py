@@ -18,7 +18,7 @@ from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.personas.models import Persona
 from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.personas_domicilios.models import PersonaDomicilio
-from orion.blueprints.personas.forms import PersonaEditDomicilioFiscalForm
+from orion.blueprints.personas.forms import PersonaEditDomicilioFiscalForm, PersonaEditDatosAcademicosForm
 
 MODULO = "PERSONAS"
 
@@ -178,6 +178,35 @@ def edit_domicilio_fiscal(persona_id):
     form.localidad.data = persona.domicilio_fiscal_localidad
     form.codigo_postal.data = persona.domicilio_fiscal_cp
     return render_template("personas/edit_domicilio_fiscal.jinja2", form=form, persona=persona)
+
+
+@personas.route("/personas/edicion_datos_academicos/<int:persona_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit_datos_academicos(persona_id):
+    """Editar Domicilio Fiscal de una Persona"""
+    persona = Persona.query.get_or_404(persona_id)
+    form = PersonaEditDatosAcademicosForm()
+    if form.validate_on_submit():
+        persona.nivel_estudios = form.nivel_estudios.data
+        persona.nivel_estudios_max_id = form.nivel_max_estudios.data
+        persona.carrera_id = form.carrera.data
+        persona.cedula_profesional = form.cedula_profesional.data
+        persona.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Datos Académicos de una Persona {persona.nombre_completo}"),
+            url=url_for("personas.detail", persona_id=persona.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(url_for("personas.detail_section", seccion="historial_academico", persona_id=persona_id))
+    form.persona.data = persona.nombre_completo
+    form.nivel_estudios.data = persona.nivel_estudios
+    form.nivel_max_estudios.data = persona.nivel_estudios_max_id
+    form.carrera.data = persona.carrera_id
+    form.cedula_profesional.data = persona.cedula_profesional
+    return render_template("personas/edit_datos_academicos.jinja2", form=form, persona=persona)
 
 
 @personas.route("/personas/query_personas_json", methods=["POST"])
