@@ -3,7 +3,7 @@ Personas, formularios
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, IntegerField, SelectField
+from wtforms import StringField, SubmitField, IntegerField, SelectField, DateField, BooleanField
 from wtforms.validators import DataRequired, Length, Optional
 
 from orion.blueprints.carreras.models import Carrera
@@ -35,7 +35,7 @@ class PersonaEditDomicilioFiscalForm(FlaskForm):
 
 
 class PersonaEditDatosAcademicosForm(FlaskForm):
-    """Editar el Domicilio Fiscal de una Persona"""
+    """Editar el Datos Académicos de una Persona"""
 
     persona = StringField("Persona")  # ReadOnly
     nivel_estudios = SelectField("Tipo", choices=Persona.ESTUDIOS.items(), validators=[DataRequired()])
@@ -56,3 +56,19 @@ class PersonaEditDatosAcademicosForm(FlaskForm):
         self.carrera.choices = [
             (r.id, f"{r.nombre}") for r in Carrera.query.filter_by(estatus="A").order_by(Carrera.nombre).all()
         ]
+
+
+class PersonaEditDatosPersonalesForm(FlaskForm):
+    """Editar el Datos Personales de una Persona"""
+
+    persona = StringField("Persona")  # ReadOnly
+    fecha_ingreso_gob = DateField("Fecha de ingreso en Gobierno del Estado")
+    fecha_ingreso_pj = DateField("Fecha de ingreso al Poder Judicial")
+    num_seguridad_social = StringField("Número de Seguridad Social")
+    estado_civil = SelectField("Estado Civil", choices=Persona.ESTADOS_CIVILES.items(), validators=[DataRequired()])
+    fecha_nacimiento = DateField("Fecha de Nacimiento")
+    telefono_personal = StringField("Teléfono Personal")
+    telefono_domicilio = StringField("Teléfono Domicilio")
+    email_secundario = StringField("Email Personal")
+    es_madre = BooleanField("¿Es Madre?")
+    guardar = SubmitField("Guardar")

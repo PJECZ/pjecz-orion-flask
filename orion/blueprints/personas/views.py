@@ -18,7 +18,11 @@ from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.personas.models import Persona
 from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.personas_domicilios.models import PersonaDomicilio
-from orion.blueprints.personas.forms import PersonaEditDomicilioFiscalForm, PersonaEditDatosAcademicosForm
+from orion.blueprints.personas.forms import (
+    PersonaEditDomicilioFiscalForm,
+    PersonaEditDatosAcademicosForm,
+    PersonaEditDatosPersonalesForm,
+)
 
 MODULO = "PERSONAS"
 
@@ -207,6 +211,44 @@ def edit_datos_academicos(persona_id):
     form.carrera.data = persona.carrera_id
     form.cedula_profesional.data = persona.cedula_profesional
     return render_template("personas/edit_datos_academicos.jinja2", form=form, persona=persona)
+
+
+@personas.route("/personas/edicion_datos_personales/<int:persona_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit_datos_personales(persona_id):
+    """Editar Domicilio Fiscal de una Persona"""
+    persona = Persona.query.get_or_404(persona_id)
+    form = PersonaEditDatosPersonalesForm()
+    if form.validate_on_submit():
+        persona.fecha_ingreso_gobierno = form.fecha_ingreso_gob.data
+        persona.fecha_ingreso_pj = form.fecha_ingreso_pj.data
+        persona.num_seguridad_social = safe_string(form.num_seguridad_social.data)
+        persona.estado_civil = form.estado_civil.data
+        persona.fecha_nacimiento = form.fecha_nacimiento.data
+        persona.telefono_personal = form.telefono_personal.data
+        persona.email_secundario = form.email_secundario.data
+        persona.madre = form.es_madre.data
+        # persona.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Datos Personales de una Persona {persona.nombre_completo}"),
+            url=url_for("personas.detail", persona_id=persona.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(url_for("personas.detail_section", seccion="datos_personales", persona_id=persona_id))
+    form.persona.data = persona.nombre_completo
+    form.fecha_ingreso_gob.data = persona.fecha_ingreso_gobierno
+    form.fecha_ingreso_pj.data = persona.fecha_ingreso_pj
+    form.num_seguridad_social.data = persona.num_seguridad_social
+    form.estado_civil.data = persona.estado_civil
+    form.fecha_nacimiento.data = persona.fecha_nacimiento
+    form.telefono_personal.data = persona.telefono_personal
+    form.telefono_domicilio.data = persona.telefono_domicilio
+    form.email_secundario.data = persona.email_secundario
+    form.es_madre.data = persona.madre
+    return render_template("personas/edit_datos_personales.jinja2", form=form, persona=persona)
 
 
 @personas.route("/personas/query_personas_json", methods=["POST"])

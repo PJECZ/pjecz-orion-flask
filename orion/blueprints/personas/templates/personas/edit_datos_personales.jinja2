@@ -1,0 +1,28 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Datos Personales {{ persona.nombre_completo }}{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar Datos Personales ' + persona.nombre_completo) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'persona_id': persona.id} %}
+        {% call f.form_tag('personas.edit_datos_personales', fid='persona_form', **form_kwargs) %}
+            {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.fecha_ingreso_gob) %}{% endcall %}
+            {% call f.form_group(form.fecha_ingreso_pj) %}{% endcall %}
+            {% call f.form_group(form.num_seguridad_social) %}{% endcall %}
+            {% call f.form_group(form.estado_civil) %}{% endcall %}
+            {% call f.form_group(form.fecha_nacimiento) %}{% endcall %}
+            {% call f.form_group(form.telefono_personal) %}{% endcall %}
+            {% call f.form_group(form.telefono_domicilio) %}{% endcall %}
+            {% call f.form_group(form.email_secundario) %}{% endcall %}
+            {% call f.form_group(form.es_madre) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
