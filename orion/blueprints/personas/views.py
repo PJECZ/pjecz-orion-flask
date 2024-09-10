@@ -11,17 +11,20 @@ from flask_login import current_user, login_required
 from sqlalchemy import or_
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
+from lib.safe_string import safe_message, safe_string, safe_curp, safe_rfc, safe_email
 from orion.blueprints.bitacoras.models import Bitacora
 from orion.blueprints.modulos.models import Modulo
 from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.personas.models import Persona
 from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.personas_domicilios.models import PersonaDomicilio
+from orion.blueprints.personas_fotografias.models import PersonaFotografia
 from orion.blueprints.personas.forms import (
     PersonaEditDomicilioFiscalForm,
     PersonaEditDatosAcademicosForm,
     PersonaEditDatosPersonalesForm,
+    PersonaEditDatosGeneralesForm,
+    PersonaEditObservacionesForm,
 )
 
 MODULO = "PERSONAS"
@@ -125,7 +128,13 @@ def detail(persona_id):
     """Detalle de un Persona"""
     locale.setlocale(locale.LC_TIME, "es_MX")
     persona = Persona.query.get_or_404(persona_id)
-    return render_template("personas/detail.jinja2", persona=persona)
+    fotografia = (
+        PersonaFotografia.query.filter_by(persona=persona)
+        .filter_by(estatus="A")
+        .order_by(PersonaFotografia.modificado.desc())
+        .first()
+    )
+    return render_template("personas/detail.jinja2", persona=persona, fotografia=fotografia)
 
 
 @personas.route("/personas/<string:seccion>/<int:persona_id>")
@@ -133,6 +142,12 @@ def detail_section(seccion, persona_id):
     """Detalle de un Persona"""
     locale.setlocale(locale.LC_TIME, "es_MX")
     persona = Persona.query.get_or_404(persona_id)
+    fotografia = (
+        PersonaFotografia.query.filter_by(persona=persona)
+        .filter_by(estatus="A")
+        .order_by(PersonaFotografia.modificado.desc())
+        .first()
+    )
     seccion_page = f"personas/detail_{seccion}.jinja2"
     # Calculo de edad para la sección de Datos Personales
     edad = 0
@@ -140,11 +155,16 @@ def detail_section(seccion, persona_id):
         edad = date.today() - persona.fecha_nacimiento
         edad = int(edad.days / 365)
     if seccion == "domicilios":
-        persona_domicilio = PersonaDomicilio.query.filter_by(persona_id=persona_id).first()
+        persona_domicilio = (
+            PersonaDomicilio.query.filter_by(persona_id=persona_id)
+            .filter_by(estatus="A")
+            .order_by(PersonaDomicilio.modificado.desc())
+            .first()
+        )
         if persona_domicilio:
-            return render_template(seccion_page, persona=persona, domicilio=persona_domicilio.domicilio)
-        return render_template(seccion_page, persona=persona, domicilio=None)
-    return render_template(seccion_page, persona=persona, edad=edad)
+            return render_template(seccion_page, persona=persona, fotografia=fotografia, domicilio=persona_domicilio.domicilio)
+        return render_template(seccion_page, persona=persona, fotografia=fotografia, domicilio=None)
+    return render_template(seccion_page, persona=persona, fotografia=fotografia, edad=edad)
 
 
 @personas.route("/personas/edicion_domicilio_fiscal/<int:persona_id>", methods=["GET", "POST"])
@@ -228,7 +248,7 @@ def edit_datos_personales(persona_id):
         persona.telefono_personal = form.telefono_personal.data
         persona.email_secundario = form.email_secundario.data
         persona.madre = form.es_madre.data
-        # persona.save()
+        persona.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
@@ -249,6 +269,95 @@ def edit_datos_personales(persona_id):
     form.email_secundario.data = persona.email_secundario
     form.es_madre.data = persona.madre
     return render_template("personas/edit_datos_personales.jinja2", form=form, persona=persona)
+
+
+@personas.route("/personas/edicion_datos_generales/<int:persona_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit_datos_generales(persona_id):
+    """Editar Domicilio Fiscal de una Persona"""
+    persona = Persona.query.get_or_404(persona_id)
+    form = PersonaEditDatosGeneralesForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Validar
+        rfc = None
+        try:
+            rfc = safe_rfc(form.rfc.data)
+        except:
+            flash("RFC no válido", "warning")
+            es_valido = False
+        curp = None
+        try:
+            curp = safe_curp(form.curp.data)
+        except:
+            flash("CURP no válido", "warning")
+            es_valido = False
+
+        if es_valido:
+            # Guardar Cambios
+            persona.nombres = safe_string(form.nombres.data, save_enie=True)
+            persona.apellido_primero = safe_string(form.apellido_primero.data, save_enie=True)
+            persona.apellido_segundo = safe_string(form.apellido_segundo.data, save_enie=True)
+            persona.sexo = form.sexo.data
+            persona.rfc = rfc
+            persona.curp = curp
+            persona.email = safe_email(form.email.data)
+            persona.telefono_trabajo = safe_string(form.telefono_trabajo.data)
+            persona.telefono_trabajo_extension = safe_string(form.telefono_trabajo_extension.data)
+            persona.situancion = form.situacion.data
+            persona.fecha_baja = form.fecha_baja.data
+            persona.numero_empleado = form.numero_empleado.data
+            persona.falta_papeleria = form.falta_papeleria.data
+            persona.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Datos Generales de una Persona {persona.nombre_completo}"),
+                url=url_for("personas.detail", persona_id=persona.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(url_for("personas.detail_section", seccion="datos_generales", persona_id=persona_id))
+    form.persona.data = persona.nombre_completo
+    form.nombres.data = persona.nombres
+    form.apellido_primero.data = persona.apellido_primero
+    form.apellido_segundo.data = persona.apellido_segundo
+    form.sexo.data = persona.sexo
+    form.rfc.data = persona.rfc
+    form.curp.data = persona.curp
+    form.email.data = persona.email
+    form.telefono_trabajo.data = persona.telefono_trabajo
+    form.telefono_trabajo_extension.data = persona.telefono_trabajo_extension
+    form.situacion.data = persona.situacion
+    form.fecha_baja.data = persona.fecha_baja
+    form.numero_empleado.data = persona.numero_empleado
+    form.falta_papeleria.data = persona.falta_papeleria
+    return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
+
+
+@personas.route("/personas/edicion_observaciones/<int:persona_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit_observaciones(persona_id):
+    """Editar Domicilio Fiscal de una Persona"""
+    persona = Persona.query.get_or_404(persona_id)
+    form = PersonaEditObservacionesForm()
+    if form.validate_on_submit():
+        persona.observaciones = safe_string(form.observaciones.data, save_enie=True)
+        persona.observaciones_especiales = safe_string(form.observaciones_especiales.data, save_enie=True)
+        persona.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Observaciones de una Persona {persona.nombre_completo}"),
+            url=url_for("personas.detail", persona_id=persona.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(url_for("personas.detail_section", seccion="observaciones", persona_id=persona_id))
+    form.persona.data = persona.nombre_completo
+    form.observaciones.data = persona.observaciones
+    form.observaciones_especiales.data = persona.observaciones_especiales
+    return render_template("personas/edit_observaciones.jinja2", form=form, persona=persona)
 
 
 @personas.route("/personas/query_personas_json", methods=["POST"])

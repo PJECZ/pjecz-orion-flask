@@ -3,8 +3,8 @@ Personas, formularios
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, IntegerField, SelectField, DateField, BooleanField
-from wtforms.validators import DataRequired, Length, Optional
+from wtforms import StringField, SubmitField, IntegerField, SelectField, DateField, BooleanField, RadioField, TextAreaField
+from wtforms.validators import DataRequired, Length, Optional, Email
 
 from orion.blueprints.carreras.models import Carrera
 from orion.blueprints.niveles_academicos.models import NivelAcademico
@@ -59,7 +59,7 @@ class PersonaEditDatosAcademicosForm(FlaskForm):
 
 
 class PersonaEditDatosPersonalesForm(FlaskForm):
-    """Editar el Datos Personales de una Persona"""
+    """Editar los Datos Personales de una Persona"""
 
     persona = StringField("Persona")  # ReadOnly
     fecha_ingreso_gob = DateField("Fecha de ingreso en Gobierno del Estado")
@@ -69,6 +69,36 @@ class PersonaEditDatosPersonalesForm(FlaskForm):
     fecha_nacimiento = DateField("Fecha de Nacimiento")
     telefono_personal = StringField("Teléfono Personal")
     telefono_domicilio = StringField("Teléfono Domicilio")
-    email_secundario = StringField("Email Personal")
+    email_secundario = StringField("Email Personal", validators=[Email()])
     es_madre = BooleanField("¿Es Madre?")
+    guardar = SubmitField("Guardar")
+
+
+class PersonaEditDatosGeneralesForm(FlaskForm):
+    """Editar los Datos Generales de una Persona"""
+
+    persona = StringField("Persona")  # ReadOnly
+    nombres = StringField("Nombres", validators=[DataRequired(), Length(max=128)])
+    apellido_primero = StringField("Apellido Primero", validators=[DataRequired(), Length(max=128)])
+    apellido_segundo = StringField("Apellido Segundo", validators=[Optional(), Length(max=128)])
+    sexo = SelectField("Sexo", choices=Persona.SEXOS.items(), validators=[DataRequired()])
+    curp = StringField("CURP")
+    rfc = StringField("RFC")
+    email = StringField("e-mail", validators=[Email()])
+    telefono_trabajo = StringField("Teléfono del Trabajo", validators=[Length(max=64)])
+    telefono_trabajo_extension = StringField("Teléfono del Trabajo Extensión", validators=[Length(max=16)])
+    situacion = SelectField("Situación", choices=Persona.SITUACIONES.items(), validators=[Optional()])
+    fecha_baja = DateField("Fecha de Baja", validators=[Optional()])
+    # numero_empleado_opciones = RadioField("Opciones para el Número de Empelado", choices=Persona.ESTADOS.items())
+    numero_empleado = IntegerField("Número de Empleado", validators=[Optional()])
+    falta_papeleria = BooleanField("Le falta papelería")
+    guardar = SubmitField("Guardar")
+
+
+class PersonaEditObservacionesForm(FlaskForm):
+    """Editar los Observaciones de una Persona"""
+
+    persona = StringField("Persona")  # ReadOnly
+    observaciones = TextAreaField("Observaciones", validators=[Length(max=512)])
+    observaciones_especiales = TextAreaField("Observaciones Especiales", validators=[Length(max=512)])
     guardar = SubmitField("Guardar")

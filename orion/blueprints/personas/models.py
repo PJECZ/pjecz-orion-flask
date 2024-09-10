@@ -130,7 +130,7 @@ class Persona(database.Model, UniversalMixin):
 
     # Hijos
     # TODO: Conectar hijos
-    # fotografias = db.relationship("PersonaFotografia", back_populates="persona")
+    fotografias: Mapped[List["PersonaFotografia"]] = relationship(back_populates="persona")
     # sistemas = db.relationship("SistemaPersona", back_populates="persona")
     # cursos = db.relationship("PersonaCurso", back_populates="persona")
     # familiares = db.relationship("PersonaFamiliar", back_populates="persona")

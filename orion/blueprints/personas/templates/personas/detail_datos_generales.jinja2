@@ -9,9 +9,9 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Persona ' + persona.nombre_completo) %}
         {{ topbar.button_previous('Personas', url_for('personas.list_active')) }}
-        {# if current_user.can_edit('PERSONAS') %}
-            {{ topbar.button_edit('Editar', url_for('personas.edit', persona_id=persona.id)) }}
-        {% endif #}
+        {% if current_user.can_edit('PERSONAS') %}
+            {{ topbar.button_edit('Editar', url_for('personas.edit_datos_generales', persona_id=persona.id)) }}
+        {% endif %}
         {# if current_user.can_admin('PERSONAS') %}
             {% if persona.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('personas.delete', persona_id=persona.id)) }}{% endif %}
             {% if persona.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('personas.recover', persona_id=persona.id)) }}{% endif %}
@@ -53,7 +53,11 @@
                     </div>
                 </div>
                 <div class="img-fluid img-det">
-                    <img src='/static/img/default_persona.jpg '>
+                    {% if fotografia %}
+                        <img src='{{fotografia.url}}' width="255px">
+                    {% else %}
+                        <img src='/static/img/default_persona.jpg'>
+                    {% endif %}
                 </div>
                 {{ detail.label_value('Fecha de Baja', persona.fecha_baja) }}
                 {% if persona.falta_papeleria %}
@@ -87,6 +91,7 @@
         <a id="btn_incapacidades" href="{{url_for('personas.detail_section', seccion='incapacidades', persona_id=persona.id)}}" class="btn btn-outline-primary">Incapacidades</a>
         <a id="btn_licencias" href="{{url_for('personas.detail_section', seccion='licencias', persona_id=persona.id)}}" class="btn btn-outline-primary">Licencias</a>
         <a id="btn_nombramientos" href="{{url_for('personas.detail_section', seccion='personas_nombramientos', persona_id=persona.id)}}" class="btn btn-outline-primary">Nombramientos</a>
+        <a id="btn_observaciones" href="{{url_for('personas.detail_section', seccion='observaciones', persona_id=persona.id)}}" class="btn btn-outline-primary">Observaciones</a>
     </div>
 {% endblock %}
 
