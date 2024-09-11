@@ -276,12 +276,6 @@ def edit_datos_personales(persona_id):
 def edit_datos_generales(persona_id):
     """Editar Domicilio Fiscal de una Persona"""
     persona = Persona.query.get_or_404(persona_id)
-    fotografia = (
-        PersonaFotografia.query.filter_by(persona=persona)
-        .filter_by(estatus="A")
-        .order_by(PersonaFotografia.modificado.desc())
-        .first()
-    )
     form = PersonaEditDatosGeneralesForm()
     if form.validate_on_submit():
         es_valido = True
@@ -338,7 +332,7 @@ def edit_datos_generales(persona_id):
     form.fecha_baja.data = persona.fecha_baja
     form.numero_empleado.data = persona.numero_empleado
     form.falta_papeleria.data = persona.falta_papeleria
-    return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona, fotografia=fotografia)
+    return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
 
 
 @personas.route("/personas/edicion_observaciones/<int:persona_id>", methods=["GET", "POST"])

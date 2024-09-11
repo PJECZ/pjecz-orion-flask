@@ -124,10 +124,46 @@ def edit(persona_fotografia_id):
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
             descripcion=safe_message(f"Editado Fotografía {fotografia.persona.nombre_completo}"),
-            url=url_for("personas_fotografias.detail", fotografia_id=fotografia.id),
+            url=url_for("personas_fotografias.detail", persona_fotografia_id=fotografia.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
     form.persona.data = fotografia.persona.nombre_completo
     return render_template("personas_fotografias/edit.jinja2", form=form, fotografia=fotografia)
+
+
+@personas_fotografias.route("/personas_fotografias/eliminar/<int:persona_fotografia_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(persona_fotografia_id):
+    """Eliminar Fotografía"""
+    fotografia = PersonaFotografia.query.get_or_404(persona_fotografia_id)
+    if fotografia.estatus == "A":
+        fotografia.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Fotografía {fotografia.persona.nombre_completo}"),
+            url=url_for("personas_fotografias.detail", persona_fotografia_id=fotografia.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("personas_fotografias.detail", persona_fotografia_id=fotografia.id))
+
+
+@personas_fotografias.route("/personas_fotografias/recuperar/<int:persona_fotografia_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(persona_fotografia_id):
+    """Recuperar Fotografía"""
+    fotografia = PersonaFotografia.query.get_or_404(persona_fotografia_id)
+    if fotografia.estatus == "B":
+        fotografia.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Fotografía {fotografia.persona.nombre_completo}"),
+            url=url_for("personas_fotografias.detail", persona_fotografia_id=fotografia.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("personas_fotografias.detail", persona_fotografia_id=fotografia.id))
