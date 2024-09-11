@@ -54,9 +54,13 @@
                 </div>
                 <div class="img-fluid img-det">
                     {% if fotografia %}
-                        <img src='{{fotografia.url}}' width="255px">
+                        <a href="{{url_for('personas_fotografias.detail', persona_fotografia_id=fotografia.id)}}">
+                            <img src='{{fotografia.url}}' width="255px">
+                        </a>
                     {% else %}
-                        <img src='/static/img/default_persona.jpg'>
+                        <a href="{{url_for('personas_fotografias.new_with_persona_id', persona_id=persona.id)}}">
+                            <img src='/static/img/default_persona.jpg'>
+                        </a>
                     {% endif %}
                 </div>
                 {{ detail.label_value('Fecha de Baja', persona.fecha_baja) }}
