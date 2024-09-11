@@ -24,7 +24,7 @@
         {{ detail.label_value('Archivo', fotografia.archivo) }}
         {{ detail.label_value('URL', fotografia.url, fotografia.url) }}
     {% endcall %}
-    {% call detail.card('Vista previa del archivo') %}
+    {% call detail.card('Vista previa de la fotografía') %}
         <a href="{{ fotografia.url }}"><img src="{{ fotografia.url }}" style="max-width: 255px; height: auto;"/></a>
     {% endcall %}
 {% endblock %}

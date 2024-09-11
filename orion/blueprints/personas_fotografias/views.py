@@ -118,17 +118,58 @@ def edit(persona_fotografia_id):
     fotografia = PersonaFotografia.query.get_or_404(persona_fotografia_id)
     form = PersonaFotografiaForm()
     if form.validate_on_submit():
-        fotografia.nombre_o_descripcion = safe_string(form.nombre_o_descripcion.data)
-        # fotografia.save()
-        bitacora = Bitacora(
-            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-            usuario=current_user,
-            descripcion=safe_message(f"Editado Fotografía {fotografia.persona.nombre_completo}"),
-            url=url_for("personas_fotografias.detail", persona_fotografia_id=fotografia.id),
-        )
-        bitacora.save()
-        flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+        es_valido = True
+        archivo = request.files["archivo"]
+        storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["jpg", "jpeg", "png"])
+        try:
+            storage.set_content_type(archivo.filename)
+        except MyNotAllowedExtensionError:
+            flash("Tipo de archivo no permitido.", "warning")
+            es_valido = False
+        except MyUnknownExtensionError:
+            flash("Tipo de archivo desconocido.", "warning")
+            es_valido = False
+        if es_valido:
+            # crear un nuevo registro
+            fotografia_new = PersonaFotografia(
+                persona=fotografia.persona,
+                archivo="",
+                url="",
+            )
+            fotografia_new.save()
+            # Subir a Google Cloud Storage
+            es_exitoso = True
+            try:
+                storage.set_filename(hashed_id=fotografia_new.encode_id(), description="fotografia")
+                storage.upload(archivo.stream.read())
+            except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
+                flash("Error fatal al subir el archivo a GCS.", "warning")
+                es_exitoso = False
+            except MyMissingConfigurationError:
+                flash("Error al subir el archivo porque falla la configuración de GCS.", "danger")
+                es_exitoso = False
+            except Exception:
+                flash("Error desconocido al subir el archivo.", "danger")
+                es_exitoso = False
+            # Remplazar archivo
+            if es_exitoso:
+                fotografia.delete()
+                fotografia_new.archivo = storage.filename
+                fotografia_new.url = storage.url
+                fotografia_new.save()
+                # Salida en bitacora
+                bitacora = Bitacora(
+                    modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                    usuario=current_user,
+                    descripcion=safe_message(f"Editado Fotografía {fotografia_new.persona.nombre_completo}"),
+                    url=url_for("personas_fotografias.detail", persona_fotografia_id=fotografia_new.id),
+                )
+                bitacora.save()
+                flash(bitacora.descripcion, "success")
+                return redirect(bitacora.url)
+            else:
+                fotografia_new.delete()
+                return redirect(url_for("personas.detail", persona_id=fotografia.persona_id))
     form.persona.data = fotografia.persona.nombre_completo
     return render_template("personas_fotografias/edit.jinja2", form=form, fotografia=fotografia)
 
