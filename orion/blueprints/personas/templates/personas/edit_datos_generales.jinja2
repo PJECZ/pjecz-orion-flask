@@ -29,6 +29,14 @@
             {# {% call f.form_group(form.numero_empleado_opciones) %}{% endcall %} #}
             {% call f.form_group(form.numero_empleado) %}{% endcall %}
             {% call f.form_group(form.falta_papeleria) %}{% endcall %}
+            <hr />
+            {% if fotografia.archivo %}
+                <a class="btn btn-warning" href="{{url_for('personas_fotografias.edit', persona_fotografia_id=fotografia.id)}}">Editar Fotografía</a>
+                <p>{{ fotografia.url }}</p>
+            {% else %}
+                <a class="btn btn-primary" href="{{url_for('personas_fotografias.new_with_persona_id', persona_id=persona.id)}}">Nueva Fotografía</a>
+            {% endif %}
+            <hr />
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
