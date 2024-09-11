@@ -1,0 +1,25 @@
+{% extends 'personas/detail_datos_generales.jinja2' %}
+
+{% block content %}
+    {{ super() }}
+    <!-- Ver Datos Personales -->
+    {# {% if current_user.can_view("DATOS PERSONALES") %} #}
+        {% call detail.card('Observaciones') %}
+            {{ detail.label_value('Observaciones', persona.observaciones) }}
+            <hr/>
+            {{ detail.label_value('Observaciones Especiales', persona.observaciones_especiales) }}
+            <hr />
+            <a href="{{url_for('personas.edit_observaciones', persona_id=persona.id)}}" class="btn btn-warning">Editar</a>
+        {% endcall %}
+    {# {% endif %} #}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ super() }}
+    <!-- Activar btn de seccion -->
+    <script>
+        const boton = document.getElementById('btn_observaciones');
+        boton.classList.add('active');
+        boton.href = "{{url_for('personas.detail', persona_id=persona.id)}}";
+    </script>
+{% endblock %}

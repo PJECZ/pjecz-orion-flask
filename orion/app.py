@@ -28,6 +28,7 @@ from orion.blueprints.permisos.views import permisos
 from orion.blueprints.personas.views import personas
 from orion.blueprints.personas_adjuntos.views import personas_adjuntos
 from orion.blueprints.personas_domicilios.views import personas_domicilios
+from orion.blueprints.personas_fotografias.views import personas_fotografias
 from orion.blueprints.personas_nombramientos.views import personas_nombramientos
 from orion.blueprints.puestos.views import puestos
 from orion.blueprints.puestos_funciones.views import puestos_funciones
@@ -75,6 +76,7 @@ def create_app():
     app.register_blueprint(personas)
     app.register_blueprint(personas_adjuntos)
     app.register_blueprint(personas_domicilios)
+    app.register_blueprint(personas_fotografias)
     app.register_blueprint(personas_nombramientos)
     app.register_blueprint(puestos)
     app.register_blueprint(puestos_funciones)

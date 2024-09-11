@@ -19,6 +19,8 @@
             {{ detail.label_value('email secundario', persona.email_secundario) }}
             {{ detail.label_value('Teléfono personal', persona.telefono_personal) }}
             {{ detail.label_value('Teléfono de su domicilio', persona.telefono_domicilio) }}
+            <hr />
+            <a href="{{url_for('personas.edit_datos_personales', persona_id=persona.id)}}" class="btn btn-warning">Editar</a>
         {% endcall %}
     {# {% endif %} #}
 {% endblock %}
