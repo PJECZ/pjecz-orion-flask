@@ -144,6 +144,12 @@ def new():
     """Nuevo Persana"""
     form = PersonaForm()
     if form.validate_on_submit():
+        # Validar Núm. Empleado
+        numero_empleado = form.numero_empleado.data
+        num_empleado_repetido = Persona.query.filter_by(numero_empleado=numero_empleado).first()
+        if num_empleado_repetido:
+            flash("Esta Número de Empleado ya se encuentra en uso.", "warning")
+            return render_template("personas/new.jinja2", form=form)
         # Validar CURP
         curp = safe_curp(form.curp.data)
         curp_repetida = Persona.query.filter_by(curp=curp).first()
@@ -341,6 +347,14 @@ def edit_datos_generales(persona_id):
     form = PersonaEditDatosGeneralesForm()
     if form.validate_on_submit():
         es_valido = True
+        # Validar Número de Empleado
+        numero_empleado = form.numero_empleado.data
+        num_empleado_repetido = (
+            Persona.query.filter_by(numero_empleado=numero_empleado).filter(Persona.id != persona.id).first()
+        )
+        if num_empleado_repetido:
+            flash("Esta Número de Empleado ya se encuentra en uso.", "warning")
+            return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
         # Validar RFC
         rfc = None
         try:
