@@ -20,6 +20,7 @@ from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.personas_domicilios.models import PersonaDomicilio
 from orion.blueprints.personas_fotografias.models import PersonaFotografia
 from orion.blueprints.personas.forms import (
+    PersonaForm,
     PersonaEditDomicilioFiscalForm,
     PersonaEditDatosAcademicosForm,
     PersonaEditDatosPersonalesForm,
@@ -135,6 +136,67 @@ def detail(persona_id):
         .first()
     )
     return render_template("personas/detail.jinja2", persona=persona, fotografia=fotografia)
+
+
+@personas.route("/personas/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Persana"""
+    form = PersonaForm()
+    if form.validate_on_submit():
+        # Validar CURP
+        curp = safe_curp(form.curp.data)
+        curp_repetida = Persona.query.filter_by(curp=curp).first()
+        if curp_repetida:
+            flash("Esta CURP ya se encuentra en uso.", "warning")
+            return render_template("personas/new.jinja2", form=form)
+        # Validar RFC
+        rfc = safe_rfc(form.rfc.data)
+        rfc_repetida = Persona.query.filter_by(rfc=rfc).first()
+        if rfc_repetida:
+            flash("Esta RFC ya se encuentra en uso.", "warning")
+            return render_template("personas/new.jinja2", form=form)
+        # Validar Email
+        email = safe_email(form.email.data)
+        email_repetida = Persona.query.filter_by(email=email).first()
+        if email_repetida:
+            flash("Este email ya se encuentra en uso.", "warning")
+            return render_template("personas/new.jinja2", form=form)
+        # Definiendo variable de Numero de empleado temporal
+        numero_empleado_temporal_var = False
+        if form.numero_empleado_opciones.data == "TEMP":
+            numero_empleado_temporal_var = True
+        else:
+            numero_empleado_temporal_var = False
+        # Crear Registro
+        persona = Persona(
+            nombres=safe_string(form.nombres.data, save_enie=True),
+            apellido_primero=safe_string(form.apellido_primero.data, save_enie=True),
+            apellido_segundo=safe_string(form.apellido_segundo.data, save_enie=True),
+            sexo=form.sexo.data,
+            curp=curp,
+            rfc=rfc,
+            email=email,
+            telefono_trabajo=safe_string(form.telefono_trabajo.data),
+            telefono_trabajo_extension=safe_string(form.telefono_trabajo_extension.data),
+            situacion=form.situacion.data,
+            fecha_baja=form.fecha_baja.data,
+            numero_empleado_temporal=numero_empleado_temporal_var,
+            numero_empleado=form.numero_empleado.data,
+            falta_papeleria=form.falta_papeleria.data,
+            madre=False,
+        )
+        persona.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Persana {persona.nombres}"),
+            url=url_for("personas.detail", persona_id=persona.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("personas/new.jinja2", form=form)
 
 
 @personas.route("/personas/<string:seccion>/<int:persona_id>")
@@ -279,33 +341,54 @@ def edit_datos_generales(persona_id):
     form = PersonaEditDatosGeneralesForm()
     if form.validate_on_submit():
         es_valido = True
-        # Validar
+        # Validar RFC
         rfc = None
         try:
             rfc = safe_rfc(form.rfc.data)
         except:
             flash("RFC no válido", "warning")
             es_valido = False
+        rfc_repetida = Persona.query.filter_by(rfc=rfc).filter(Persona.id != persona.id).first()
+        if rfc_repetida:
+            flash("Esta RFC ya se encuentra en uso.", "warning")
+            return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
+        # Validar CURP
         curp = None
         try:
             curp = safe_curp(form.curp.data)
         except:
             flash("CURP no válido", "warning")
             es_valido = False
-
+        curp_repetida = Persona.query.filter_by(curp=curp).filter(Persona.id != persona.id).first()
+        if curp_repetida:
+            flash("Esta CURP ya se encuentra en uso.", "warning")
+            return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
+        # Validar Email
+        email = safe_email(form.email.data)
+        email_repetida = Persona.query.filter_by(email=email).filter(Persona.id != persona.id).first()
+        if email_repetida:
+            flash("Este email ya se encuentra en uso.", "warning")
+            return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
+        # Definiendo variable de Numero de empleado temporal
+        numero_empleado_temporal_var = False
+        if form.numero_empleado_opciones.data == "TEMP":
+            numero_empleado_temporal_var = True
+        else:
+            numero_empleado_temporal_var = False
+        # Guardar Cambios
         if es_valido:
-            # Guardar Cambios
             persona.nombres = safe_string(form.nombres.data, save_enie=True)
             persona.apellido_primero = safe_string(form.apellido_primero.data, save_enie=True)
             persona.apellido_segundo = safe_string(form.apellido_segundo.data, save_enie=True)
             persona.sexo = form.sexo.data
             persona.rfc = rfc
             persona.curp = curp
-            persona.email = safe_email(form.email.data)
+            persona.email = email
             persona.telefono_trabajo = safe_string(form.telefono_trabajo.data)
             persona.telefono_trabajo_extension = safe_string(form.telefono_trabajo_extension.data)
             persona.situancion = form.situacion.data
             persona.fecha_baja = form.fecha_baja.data
+            persona.numero_empleado_temporal = numero_empleado_temporal_var
             persona.numero_empleado = form.numero_empleado.data
             persona.falta_papeleria = form.falta_papeleria.data
             persona.save()
@@ -332,6 +415,10 @@ def edit_datos_generales(persona_id):
     form.fecha_baja.data = persona.fecha_baja
     form.numero_empleado.data = persona.numero_empleado
     form.falta_papeleria.data = persona.falta_papeleria
+    if persona.numero_empleado_temporal:
+        form.numero_empleado_opciones.data = "TEMP"
+    else:
+        form.numero_empleado_opciones.data = "MANUAL"
     return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
 
 

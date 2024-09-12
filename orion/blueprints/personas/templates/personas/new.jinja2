@@ -1,0 +1,34 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nueva Persona{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Nueva Persona') }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% call f.form_tag('personas.new', fid='persona_form') %}
+            {% call f.form_group(form.nombres) %}{% endcall %}
+            {% call f.form_group(form.apellido_primero) %}{% endcall %}
+            {% call f.form_group(form.apellido_segundo) %}{% endcall %}
+            {% call f.form_group(form.sexo ) %}{% endcall %}
+            {% call f.form_group(form.curp ) %}{% endcall %}
+            {% call f.form_group(form.rfc ) %}{% endcall %}
+            <hr />
+            <h3>Trabajo</h3>
+            {% call f.form_group(form.email ) %}{% endcall %}
+            {% call f.form_group(form.telefono_trabajo ) %}{% endcall %}
+            {% call f.form_group(form.telefono_trabajo_extension ) %}{% endcall %}
+            {% call f.form_group(form.situacion ) %}{% endcall %}
+            {% call f.form_group(form.fecha_baja ) %}{% endcall %}
+            {% call f.form_group(form.numero_empleado_opciones ) %}{% endcall %}
+            {% call f.form_group(form.numero_empleado ) %}{% endcall %}
+            {% call f.form_group(form.falta_papeleria ) %}{% endcall %}
+            <hr />
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}

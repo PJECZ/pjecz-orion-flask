@@ -14,8 +14,22 @@ from orion.blueprints.personas.models import Persona
 class PersonaForm(FlaskForm):
     """Formulario Persona"""
 
-    clave = StringField("Clave", validators=[DataRequired(), Length(max=16)])
-    descripcion = StringField("Descripción", validators=[DataRequired(), Length(max=256)])
+    nombres = StringField("Nombres", validators=[DataRequired(), Length(max=128)])
+    apellido_primero = StringField("Apellido Primero", validators=[DataRequired(), Length(max=128)])
+    apellido_segundo = StringField("Apellido Segundo", validators=[Optional(), Length(max=128)])
+    sexo = SelectField("Sexo", choices=Persona.SEXOS.items(), validators=[DataRequired()])
+    curp = StringField("CURP", validators=[DataRequired()])
+    rfc = StringField("RFC", validators=[DataRequired()])
+    email = StringField("e-mail", validators=[Email()])
+    telefono_trabajo = StringField("Teléfono del Trabajo", validators=[Length(max=64)])
+    telefono_trabajo_extension = StringField("Teléfono del Trabajo Extensión", validators=[Length(max=16)])
+    situacion = SelectField("Situación", choices=Persona.SITUACIONES.items(), validators=[Optional()])
+    fecha_baja = DateField("Fecha de Baja", validators=[Optional()])
+    numero_empleado_opciones = RadioField(
+        "Opciones para el Número de Empelado", choices=Persona.ESTADOS.items(), validators=[Optional()]
+    )
+    numero_empleado = IntegerField("Número de Empleado", validators=[Optional()])
+    falta_papeleria = BooleanField("Le falta papelería")
     guardar = SubmitField("Guardar")
 
 
@@ -89,7 +103,7 @@ class PersonaEditDatosGeneralesForm(FlaskForm):
     telefono_trabajo_extension = StringField("Teléfono del Trabajo Extensión", validators=[Length(max=16)])
     situacion = SelectField("Situación", choices=Persona.SITUACIONES.items(), validators=[Optional()])
     fecha_baja = DateField("Fecha de Baja", validators=[Optional()])
-    # numero_empleado_opciones = RadioField("Opciones para el Número de Empelado", choices=Persona.ESTADOS.items())
+    numero_empleado_opciones = RadioField("Opciones para el Número de Empelado", choices=Persona.ESTADOS.items())
     numero_empleado = IntegerField("Número de Empleado", validators=[Optional()])
     falta_papeleria = BooleanField("Le falta papelería")
     guardar = SubmitField("Guardar")

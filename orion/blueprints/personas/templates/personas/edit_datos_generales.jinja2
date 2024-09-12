@@ -26,11 +26,32 @@
             {% call f.form_group(form.telefono_trabajo_extension) %}{% endcall %}
             {% call f.form_group(form.situacion) %}{% endcall %}
             {% call f.form_group(form.fecha_baja) %}{% endcall %}
-            {# {% call f.form_group(form.numero_empleado_opciones) %}{% endcall %} #}
+            {% call f.form_group(form.numero_empleado_opciones) %}{% endcall %}
             {% call f.form_group(form.numero_empleado) %}{% endcall %}
             {% call f.form_group(form.falta_papeleria) %}{% endcall %}
             <hr />
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {# <script>
+        let num_empleado_opciones = document.getElementById('numero_empleado_opciones');
+        let num_empleado_input = document.getElementById('numero_empleado')
+
+        $( num_empleado_opciones ).ready(function(e) {
+            let target = e.target;
+            num_empleado_input.readOnly = true;
+        });
+
+        num_empleado_opciones.addEventListener('change', function (e) {
+            let target = e.target;
+            if (target.value == "TEMP") {
+                num_empleado_input.readOnly = true;
+            } else {
+                num_empleado_input.readOnly = false;
+            }
+        });
+    </script> #}
 {% endblock %}
