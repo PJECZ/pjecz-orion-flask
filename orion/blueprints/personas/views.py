@@ -360,6 +360,42 @@ def edit_observaciones(persona_id):
     return render_template("personas/edit_observaciones.jinja2", form=form, persona=persona)
 
 
+@personas.route("/personas/eliminar/<int:persona_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(persona_id):
+    """Eliminar Persona"""
+    persona = Persona.query.get_or_404(persona_id)
+    if persona.estatus == "A":
+        persona.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Persona {persona.nombre_completo}"),
+            url=url_for("personas.detail", persona_id=persona.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("personas.detail", persona_id=persona.id))
+
+
+@personas.route("/personas/recuperar/<int:persona_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(persona_id):
+    """Recuperar Persona"""
+    persona = Persona.query.get_or_404(persona_id)
+    if persona.estatus == "B":
+        persona.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Persona {persona.nombre_completo}"),
+            url=url_for("personas.detail", persona_id=persona.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("personas.detail", persona_id=persona.id))
+
+
 @personas.route("/personas/query_personas_json", methods=["POST"])
 def query_personas_json():
     """Proporcionar el JSON de Persona para elegir en un Select2"""

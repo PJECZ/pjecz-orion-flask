@@ -12,10 +12,10 @@
         {% if current_user.can_edit('PERSONAS') %}
             {{ topbar.button_edit('Editar', url_for('personas.edit_datos_generales', persona_id=persona.id)) }}
         {% endif %}
-        {# if current_user.can_admin('PERSONAS') %}
+        {% if current_user.can_admin('PERSONAS') %}
             {% if persona.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('personas.delete', persona_id=persona.id)) }}{% endif %}
             {% if persona.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('personas.recover', persona_id=persona.id)) }}{% endif %}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
