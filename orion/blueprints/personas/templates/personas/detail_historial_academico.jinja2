@@ -6,8 +6,12 @@
     {% if current_user.can_view("HISTORIAL ACADEMICOS") %}
         {% call detail.card('Datos Académicos') %}
             {{ detail.label_value('Nivel de Estudios', persona.ESTUDIOS[persona.nivel_estudios]) }}
-            {{ detail.label_value('Nivel Máximo de Estudios', persona.nivel_estudios_max.nombre, url_for('niveles_academicos.detail', nivel_academico_id=persona.nivel_estudios_max.id)) }}
-            {{ detail.label_value('Carrera', persona.carrera.nombre, url_for('carreras.detail', carrera_id=persona.carrera.id)) }}
+            {% if persona.nivel_estudios_max %}
+                {{ detail.label_value('Nivel Máximo de Estudios', persona.nivel_estudios_max.nombre, url_for('niveles_academicos.detail', nivel_academico_id=persona.nivel_estudios_max.id)) }}
+            {% endif %}
+            {% if persona.carrera %}
+                {{ detail.label_value('Carrera', persona.carrera.nombre, url_for('carreras.detail', carrera_id=persona.carrera.id)) }}
+            {% endif %}
             {{ detail.label_value('Cédula Profesional', persona.cedula_profesional) }}
             <hr />
             <a href="{{url_for('personas.edit_datos_academicos', persona_id=persona.id)}}" class="btn btn-warning">Editar</a>

@@ -76,14 +76,14 @@ class PersonaEditDatosPersonalesForm(FlaskForm):
     """Editar los Datos Personales de una Persona"""
 
     persona = StringField("Persona")  # ReadOnly
-    fecha_ingreso_gob = DateField("Fecha de ingreso en Gobierno del Estado")
-    fecha_ingreso_pj = DateField("Fecha de ingreso al Poder Judicial")
+    fecha_ingreso_gob = DateField("Fecha de ingreso en Gobierno del Estado", validators=[Optional()])
+    fecha_ingreso_pj = DateField("Fecha de ingreso al Poder Judicial", validators=[Optional()])
     num_seguridad_social = StringField("Número de Seguridad Social")
     estado_civil = SelectField("Estado Civil", choices=Persona.ESTADOS_CIVILES.items(), validators=[DataRequired()])
-    fecha_nacimiento = DateField("Fecha de Nacimiento")
-    telefono_personal = StringField("Teléfono Personal")
-    telefono_domicilio = StringField("Teléfono Domicilio")
-    email_secundario = StringField("Email Personal", validators=[Email()])
+    fecha_nacimiento = DateField("Fecha de Nacimiento", validators=[Optional()])
+    telefono_personal = StringField("Teléfono Personal", validators=[Optional()])
+    telefono_domicilio = StringField("Teléfono Domicilio", validators=[Optional()])
+    email_secundario = StringField("Email Personal", validators=[Optional(), Email()])
     es_madre = BooleanField("¿Es Madre?")
     guardar = SubmitField("Guardar")
 
