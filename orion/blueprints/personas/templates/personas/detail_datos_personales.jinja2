@@ -14,8 +14,10 @@
             {% endif %}
             {{ detail.label_value('Estado Civil', persona.ESTADOS_CIVILES[persona.estado_civil]) }}
             {% set edad_str = edad | string() %}
-            {{ detail.label_value('Fecha de nacimiento', persona.fecha_nacimiento.strftime("%-d de %B de %Y") + ' (' +
+            {% if persona.fecha_nacimiento %}
+                {{ detail.label_value('Fecha de nacimiento', persona.fecha_nacimiento.strftime("%-d de %B de %Y") + ' (' +
             edad_str + ' años)') }}
+            {% endif %}
             {{ detail.label_value('email secundario', persona.email_secundario) }}
             {{ detail.label_value('Teléfono personal', persona.telefono_personal) }}
             {{ detail.label_value('Teléfono de su domicilio', persona.telefono_domicilio) }}

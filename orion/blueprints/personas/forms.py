@@ -14,8 +14,22 @@ from orion.blueprints.personas.models import Persona
 class PersonaForm(FlaskForm):
     """Formulario Persona"""
 
-    clave = StringField("Clave", validators=[DataRequired(), Length(max=16)])
-    descripcion = StringField("Descripción", validators=[DataRequired(), Length(max=256)])
+    nombres = StringField("Nombres", validators=[DataRequired(), Length(max=128)])
+    apellido_primero = StringField("Apellido Primero", validators=[DataRequired(), Length(max=128)])
+    apellido_segundo = StringField("Apellido Segundo", validators=[Optional(), Length(max=128)])
+    sexo = SelectField("Sexo", choices=Persona.SEXOS.items(), validators=[DataRequired()])
+    curp = StringField("CURP", validators=[DataRequired()])
+    rfc = StringField("RFC", validators=[DataRequired()])
+    email = StringField("e-mail", validators=[Email()])
+    telefono_trabajo = StringField("Teléfono del Trabajo", validators=[Length(max=64)])
+    telefono_trabajo_extension = StringField("Teléfono del Trabajo Extensión", validators=[Length(max=16)])
+    situacion = SelectField("Situación", choices=Persona.SITUACIONES.items(), validators=[Optional()])
+    fecha_baja = DateField("Fecha de Baja", validators=[Optional()])
+    numero_empleado_opciones = RadioField(
+        "Opciones para el Número de Empelado", choices=Persona.ESTADOS.items(), validators=[Optional()]
+    )
+    numero_empleado = IntegerField("Número de Empleado", validators=[Optional()])
+    falta_papeleria = BooleanField("Le falta papelería")
     guardar = SubmitField("Guardar")
 
 
@@ -62,14 +76,14 @@ class PersonaEditDatosPersonalesForm(FlaskForm):
     """Editar los Datos Personales de una Persona"""
 
     persona = StringField("Persona")  # ReadOnly
-    fecha_ingreso_gob = DateField("Fecha de ingreso en Gobierno del Estado")
-    fecha_ingreso_pj = DateField("Fecha de ingreso al Poder Judicial")
+    fecha_ingreso_gob = DateField("Fecha de ingreso en Gobierno del Estado", validators=[Optional()])
+    fecha_ingreso_pj = DateField("Fecha de ingreso al Poder Judicial", validators=[Optional()])
     num_seguridad_social = StringField("Número de Seguridad Social")
     estado_civil = SelectField("Estado Civil", choices=Persona.ESTADOS_CIVILES.items(), validators=[DataRequired()])
-    fecha_nacimiento = DateField("Fecha de Nacimiento")
-    telefono_personal = StringField("Teléfono Personal")
-    telefono_domicilio = StringField("Teléfono Domicilio")
-    email_secundario = StringField("Email Personal", validators=[Email()])
+    fecha_nacimiento = DateField("Fecha de Nacimiento", validators=[Optional()])
+    telefono_personal = StringField("Teléfono Personal", validators=[Optional()])
+    telefono_domicilio = StringField("Teléfono Domicilio", validators=[Optional()])
+    email_secundario = StringField("Email Personal", validators=[Optional(), Email()])
     es_madre = BooleanField("¿Es Madre?")
     guardar = SubmitField("Guardar")
 
@@ -89,7 +103,7 @@ class PersonaEditDatosGeneralesForm(FlaskForm):
     telefono_trabajo_extension = StringField("Teléfono del Trabajo Extensión", validators=[Length(max=16)])
     situacion = SelectField("Situación", choices=Persona.SITUACIONES.items(), validators=[Optional()])
     fecha_baja = DateField("Fecha de Baja", validators=[Optional()])
-    # numero_empleado_opciones = RadioField("Opciones para el Número de Empelado", choices=Persona.ESTADOS.items())
+    numero_empleado_opciones = RadioField("Opciones para el Número de Empelado", choices=Persona.ESTADOS.items())
     numero_empleado = IntegerField("Número de Empleado", validators=[Optional()])
     falta_papeleria = BooleanField("Le falta papelería")
     guardar = SubmitField("Guardar")
