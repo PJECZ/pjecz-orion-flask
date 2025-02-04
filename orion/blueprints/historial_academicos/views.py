@@ -105,7 +105,7 @@ def new_with_persona_id(persona_id):
     persona = Persona.query.get_or_404(persona_id)
     form = HistorialAcademicoWithPersonaForm()
     if form.validate_on_submit():
-        if form.ano_inicio.data > form.ano_termino.data:
+        if form.ano_inicio.data != None and form.ano_termino.data and (form.ano_inicio.data > form.ano_termino.data):
             flash("El año de inicio no puede ser mayor al año de término.", "warning")
             return render_template("historial_academicos/new_with_persona_id.jinja2", form=form, persona=persona)
         # Guarar registro
@@ -138,7 +138,7 @@ def edit(historial_academico_id):
     historial_academico = HistorialAcademico.query.get_or_404(historial_academico_id)
     form = HistorialAcademicoWithPersonaForm()
     if form.validate_on_submit():
-        if form.ano_inicio.data > form.ano_termino.data:
+        if form.ano_inicio.data != None and form.ano_termino.data != None and (form.ano_inicio.data > form.ano_termino.data):
             flash("El año de inicio no puede ser mayor al año de término", "warning")
             return render_template("historial_academicos/edit.jinja2", form=form, historial_academico=historial_academico)
         # Guardar Cambios
