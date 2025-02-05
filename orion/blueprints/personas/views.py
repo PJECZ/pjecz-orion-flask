@@ -413,7 +413,7 @@ def edit_datos_generales(persona_id):
             persona.email = email
             persona.telefono_trabajo = safe_string(form.telefono_trabajo.data)
             persona.telefono_trabajo_extension = safe_string(form.telefono_trabajo_extension.data)
-            persona.situancion = form.situacion.data
+            persona.situacion = form.situacion.data
             persona.fecha_baja = form.fecha_baja.data
             persona.numero_empleado_temporal = numero_empleado_temporal_var
             persona.numero_empleado = form.numero_empleado.data
