@@ -145,29 +145,37 @@ def new():
     form = PersonaForm()
     if form.validate_on_submit():
         # Validar Núm. Empleado
-        numero_empleado = form.numero_empleado.data
-        num_empleado_repetido = Persona.query.filter_by(numero_empleado=numero_empleado).first()
-        if num_empleado_repetido:
-            flash("Esta Número de Empleado ya se encuentra en uso.", "warning")
-            return render_template("personas/new.jinja2", form=form)
+        numero_empleado = None
+        if form.numero_empleado.data != "":
+            numero_empleado = form.numero_empleado.data
+            num_empleado_repetido = Persona.query.filter_by(numero_empleado=numero_empleado).first()
+            if num_empleado_repetido:
+                flash("Este Número de Empleado ya se encuentra en uso.", "warning")
+                return render_template("personas/new.jinja2", form=form)
         # Validar CURP
-        curp = safe_curp(form.curp.data)
-        curp_repetida = Persona.query.filter_by(curp=curp).first()
-        if curp_repetida:
-            flash("Esta CURP ya se encuentra en uso.", "warning")
-            return render_template("personas/new.jinja2", form=form)
+        curp = None
+        if form.curp.data != "":
+            curp = safe_curp(form.curp.data)
+            curp_repetida = Persona.query.filter_by(curp=curp).first()
+            if curp_repetida:
+                flash("Esta CURP ya se encuentra en uso.", "warning")
+                return render_template("personas/new.jinja2", form=form)
         # Validar RFC
-        rfc = safe_rfc(form.rfc.data)
-        rfc_repetida = Persona.query.filter_by(rfc=rfc).first()
-        if rfc_repetida:
-            flash("Esta RFC ya se encuentra en uso.", "warning")
-            return render_template("personas/new.jinja2", form=form)
+        rfc = None
+        if form.rfc.data != "":
+            rfc = safe_rfc(form.rfc.data)
+            rfc_repetida = Persona.query.filter_by(rfc=rfc).first()
+            if rfc_repetida:
+                flash("Esta RFC ya se encuentra en uso.", "warning")
+                return render_template("personas/new.jinja2", form=form)
         # Validar Email
-        email = safe_email(form.email.data)
-        email_repetida = Persona.query.filter_by(email=email).first()
-        if email_repetida:
-            flash("Este email ya se encuentra en uso.", "warning")
-            return render_template("personas/new.jinja2", form=form)
+        email = None
+        if form.email.data != "":
+            email = safe_email(form.email.data)
+            email_repetida = Persona.query.filter_by(email=email).first()
+            if email_repetida:
+                flash("Este email ya se encuentra en uso.", "warning")
+                return render_template("personas/new.jinja2", form=form)
         # Definiendo variable de Numero de empleado temporal
         numero_empleado_temporal_var = False
         if form.numero_empleado_opciones.data == "TEMP":
@@ -349,40 +357,45 @@ def edit_datos_generales(persona_id):
         es_valido = True
         # Validar Número de Empleado
         numero_empleado = form.numero_empleado.data
-        num_empleado_repetido = (
-            Persona.query.filter_by(numero_empleado=numero_empleado).filter(Persona.id != persona.id).first()
-        )
-        if num_empleado_repetido:
-            flash("Esta Número de Empleado ya se encuentra en uso.", "warning")
-            return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
+        if numero_empleado != "" and numero_empleado != None:
+            num_empleado_repetido = (
+                Persona.query.filter_by(numero_empleado=numero_empleado).filter(Persona.id != persona.id).first()
+            )
+            if num_empleado_repetido:
+                flash("Este 'Número de Empleado' ya se encuentra en uso.", "warning")
+                return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
         # Validar RFC
         rfc = None
-        try:
-            rfc = safe_rfc(form.rfc.data)
-        except:
-            flash("RFC no válido", "warning")
-            es_valido = False
-        rfc_repetida = Persona.query.filter_by(rfc=rfc).filter(Persona.id != persona.id).first()
-        if rfc_repetida:
-            flash("Esta RFC ya se encuentra en uso.", "warning")
-            return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
+        if form.rfc.data != None and form.rfc.data != "":
+            try:
+                rfc = safe_rfc(form.rfc.data)
+            except:
+                flash("RFC no válido", "warning")
+                es_valido = False
+            rfc_repetida = Persona.query.filter_by(rfc=rfc).filter(Persona.id != persona.id).first()
+            if rfc_repetida:
+                flash("Esta RFC ya se encuentra en uso.", "warning")
+                return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
         # Validar CURP
         curp = None
-        try:
-            curp = safe_curp(form.curp.data)
-        except:
-            flash("CURP no válido", "warning")
-            es_valido = False
-        curp_repetida = Persona.query.filter_by(curp=curp).filter(Persona.id != persona.id).first()
-        if curp_repetida:
-            flash("Esta CURP ya se encuentra en uso.", "warning")
-            return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
+        if form.curp.data != None and form.curp.data != "":
+            try:
+                curp = safe_curp(form.curp.data)
+            except:
+                flash("CURP no válido", "warning")
+                es_valido = False
+            curp_repetida = Persona.query.filter_by(curp=curp).filter(Persona.id != persona.id).first()
+            if curp_repetida:
+                flash("Esta CURP ya se encuentra en uso.", "warning")
+                return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
         # Validar Email
-        email = safe_email(form.email.data)
-        email_repetida = Persona.query.filter_by(email=email).filter(Persona.id != persona.id).first()
-        if email_repetida:
-            flash("Este email ya se encuentra en uso.", "warning")
-            return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
+        email = None
+        if form.email.data != None and form.email.data != "":
+            email = safe_email(form.email.data)
+            email_repetida = Persona.query.filter_by(email=email).filter(Persona.id != persona.id).first()
+            if email_repetida:
+                flash("Este email ya se encuentra en uso.", "warning")
+                return render_template("personas/edit_datos_generales.jinja2", form=form, persona=persona)
         # Definiendo variable de Numero de empleado temporal
         numero_empleado_temporal_var = False
         if form.numero_empleado_opciones.data == "TEMP":
