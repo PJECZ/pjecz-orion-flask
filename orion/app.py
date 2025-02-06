@@ -22,6 +22,7 @@ from orion.blueprints.historial_puestos.views import historial_puestos
 from orion.blueprints.incapacidades.views import incapacidades
 from orion.blueprints.licencias.views import licencias
 from orion.blueprints.modulos.views import modulos
+from orion.blueprints.municipios.views import municipios
 from orion.blueprints.niveles_academicos.views import niveles_academicos
 from orion.blueprints.organos.views import organos
 from orion.blueprints.permisos.views import permisos
@@ -70,6 +71,7 @@ def create_app():
     app.register_blueprint(incapacidades)
     app.register_blueprint(licencias)
     app.register_blueprint(modulos)
+    app.register_blueprint(municipios)
     app.register_blueprint(niveles_academicos)
     app.register_blueprint(organos)
     app.register_blueprint(permisos)
