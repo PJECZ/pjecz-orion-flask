@@ -1,0 +1,34 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Municipio {{ municipio.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Municipio ' + municipio.nombre) %}
+        {{ topbar.button_previous('Municipios', url_for('municipios.list_active')) }}
+        {% if current_user.can_edit('MUNICIPIOS') %}
+            {{ topbar.button_edit('Editar', url_for('municipios.edit', municipio_id=municipio.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('MUNICIPIOS') %}
+            {% if municipio.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('municipios.delete', municipio_id=municipio.id)) }}{% endif %}
+            {% if municipio.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('municipios.recover', municipio_id=municipio.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=municipio.estatus) %}
+        {{ detail.label_value_big('Clave', municipio.clave) }}
+        {{ detail.label_value('Nombre', municipio.nombre) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('MUNICIPIOS') %}
+        {% if municipio.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + municipio.nombre + '?') }}{% endif %}
+        {% if municipio.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + municipio.nombre + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}
