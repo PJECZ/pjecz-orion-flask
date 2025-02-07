@@ -463,8 +463,8 @@ def edit_observaciones(persona_id):
     persona = Persona.query.get_or_404(persona_id)
     form = PersonaEditObservacionesForm()
     if form.validate_on_submit():
-        persona.observaciones = safe_string(form.observaciones.data, save_enie=True)
-        persona.observaciones_especiales = safe_string(form.observaciones_especiales.data, save_enie=True)
+        persona.observaciones = safe_string(form.observaciones.data, save_enie=True, max_len=512)
+        persona.observaciones_especiales = safe_string(form.observaciones_especiales.data, save_enie=True, max_len=512)
         persona.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
