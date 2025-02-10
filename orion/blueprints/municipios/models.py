@@ -26,6 +26,7 @@ class Municipio(database.Model, UniversalMixin):
 
     # Hijos
     usuarios: Mapped[List["Usuario"]] = relationship(back_populates="municipio")
+    personas: Mapped[List["Persona"]] = relationship(back_populates="municipio")
 
     @property
     def clave_nombre(self):
