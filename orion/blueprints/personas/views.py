@@ -194,6 +194,7 @@ def new():
             sexo=form.sexo.data,
             curp=curp,
             rfc=rfc,
+            municipio_id=form.municipio.data,
             email=email,
             telefono_trabajo=safe_string(form.telefono_trabajo.data),
             telefono_trabajo_extension=safe_string(form.telefono_trabajo_extension.data),
@@ -417,6 +418,7 @@ def edit_datos_generales(persona_id):
             persona.sexo = form.sexo.data
             persona.rfc = rfc
             persona.curp = curp
+            persona.municipio_id = form.municipio.data
             persona.email = email
             persona.telefono_trabajo = safe_string(form.telefono_trabajo.data)
             persona.telefono_trabajo_extension = safe_string(form.telefono_trabajo_extension.data)
@@ -442,6 +444,7 @@ def edit_datos_generales(persona_id):
     form.sexo.data = persona.sexo
     form.rfc.data = persona.rfc
     form.curp.data = persona.curp
+    form.municipio.data = persona.municipio_id
     form.email.data = persona.email
     form.telefono_trabajo.data = persona.telefono_trabajo
     form.telefono_trabajo_extension.data = persona.telefono_trabajo_extension
