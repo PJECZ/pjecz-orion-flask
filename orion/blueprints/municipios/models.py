@@ -24,6 +24,14 @@ class Municipio(database.Model, UniversalMixin):
     clave: Mapped[str] = mapped_column(String(3))
     nombre: Mapped[str] = mapped_column(String(256))
 
+    # Hijos
+    usuarios: Mapped[List["Usuario"]] = relationship(back_populates="municipio")
+
+    @property
+    def clave_nombre(self):
+        """Regresa la clave y el nombre"""
+        return self.clave + ": " + self.nombre
+
     def __repr__(self):
         """Representación"""
         return f"<Municipio {self.id}>"

@@ -26,6 +26,10 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
     # Clave primaria
     id: Mapped[int] = mapped_column(primary_key=True)
 
+    # Clave foránea
+    municipio_id: Mapped[int] = mapped_column(ForeignKey("municipios.id"))
+    municipio: Mapped["Municipio"] = relationship(back_populates="usuarios")
+
     # Columnas
     email: Mapped[str] = mapped_column(String(256), unique=True, index=True)
     nombres: Mapped[str] = mapped_column(String(256))
