@@ -6,7 +6,7 @@ import json
 import locale
 from datetime import date
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for, abort
 from flask_login import current_user, login_required
 from sqlalchemy import or_
 
@@ -71,6 +71,9 @@ def datatable_json():
                 )
     if "situacion" in request.form:
         consulta = consulta.filter_by(situacion=request.form["situacion"])
+    if "municipio" in request.form:
+        if request.form["municipio"] != "1":
+            consulta = consulta.filter_by(municipio_id=request.form["municipio"])
     # Luego filtrar por columnas de otras tablas
     # if "persona_rfc" in request.form:
     #     consulta = consulta.join(Persona)
@@ -104,7 +107,7 @@ def list_active():
     """Listado de Personas activos"""
     return render_template(
         "personas/list.jinja2",
-        filtros=json.dumps({"estatus": "A"}),
+        filtros=json.dumps({"estatus": "A", "municipio": current_user.municipio_id}),
         titulo="Personas",
         situaciones=Persona.SITUACIONES,
         estatus="A",
@@ -117,7 +120,7 @@ def list_inactive():
     """Listado de Personas inactivos"""
     return render_template(
         "personas/list.jinja2",
-        filtros=json.dumps({"estatus": "B"}),
+        filtros=json.dumps({"estatus": "B", "municipio": current_user.municipio_id}),
         titulo="Personas inactivos",
         situaciones=Persona.SITUACIONES,
         estatus="B",
@@ -135,6 +138,8 @@ def detail(persona_id):
         .order_by(PersonaFotografia.modificado.desc())
         .first()
     )
+    if current_user.municipio_id != 1 and current_user.municipio != persona.municipio:
+        abort(403)
     return render_template("personas/detail.jinja2", persona=persona, fotografia=fotografia)
 
 
