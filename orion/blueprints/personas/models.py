@@ -147,7 +147,7 @@ class Persona(database.Model, UniversalMixin):
     # parientes = db.relationship("PersonaFamiliarPJ", foreign_keys="PersonaFamiliarPJ.pariente_id")
     # pensiones_alimenticias = db.relationship("PersonaPensionAlimenticia", back_populates="persona")
     # personas_meritos = db.relationship("PersonaMerito", back_populates="persona")
-    # personas_actas_administrativas = db.relationship("PersonaActaAdministrativa", back_populates="persona")
+    personas_actas_administrativas: Mapped[List["PersonaActaAdministrativa"]] = relationship(back_populates="persona")
     # personas_procedimientos_diciplinarios = db.relationship("PersonaProcedimientoDiciplinario", back_populates="persona")
     # personas_escalafones = db.relationship("PersonaEscalafon", back_populates="persona")
     adjuntos: Mapped[List["PersonaAdjunto"]] = relationship(back_populates="persona")
