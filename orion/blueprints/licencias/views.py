@@ -140,7 +140,7 @@ def new():
         if historial_puesto:
             puesto_nombre = historial_puesto.puesto_funcion.nombre
         # Guardar la Licencia
-        liciencia = Licencia(
+        licencia = Licencia(
             persona_id=form.persona.data,
             tipo=form.tipo.data,
             fecha_inicio=form.fecha_inicio.data,
@@ -149,12 +149,12 @@ def new():
             motivo=safe_string(form.motivo.data, save_enie=True),
             puesto_nombre=puesto_nombre,
         )
-        liciencia.save()
+        licencia.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Nuevo Licencia {liciencia.persona.nombre_completo}"),
-            url=url_for("licencias.detail", liciencia_id=liciencia.id),
+            descripcion=safe_message(f"Nuevo Licencia {licencia.persona.nombre_completo}"),
+            url=url_for("licencias.detail", licencia_id=licencia.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
@@ -180,7 +180,7 @@ def new_with_persona_id(persona_id):
         if historial_puesto:
             puesto_nombre = historial_puesto.puesto_funcion.nombre
         # Guardar la Licencia
-        liciencia = Licencia(
+        licencia = Licencia(
             persona=persona,
             tipo=form.tipo.data,
             fecha_inicio=form.fecha_inicio.data,
@@ -189,12 +189,12 @@ def new_with_persona_id(persona_id):
             motivo=safe_string(form.motivo.data, save_enie=True),
             puesto_nombre=puesto_nombre,
         )
-        liciencia.save()
+        licencia.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Nueva Licencia {liciencia.persona.nombre_completo}"),
-            url=url_for("licencias.detail", liciencia_id=liciencia.id),
+            descripcion=safe_message(f"Nueva Licencia {licencia.persona.nombre_completo}"),
+            url=url_for("licencias.detail", licencia_id=licencia.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
