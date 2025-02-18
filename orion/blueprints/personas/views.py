@@ -19,6 +19,7 @@ from orion.blueprints.personas.models import Persona
 from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.personas_domicilios.models import PersonaDomicilio
 from orion.blueprints.personas_fotografias.models import PersonaFotografia
+from orion.blueprints.municipios.models import Municipio
 from orion.blueprints.personas.forms import (
     PersonaForm,
     PersonaEditDomicilioFiscalForm,
@@ -72,8 +73,7 @@ def datatable_json():
     if "situacion" in request.form:
         consulta = consulta.filter_by(situacion=request.form["situacion"])
     if "municipio" in request.form:
-        if request.form["municipio"] != "1":
-            consulta = consulta.filter_by(municipio_id=request.form["municipio"])
+        consulta = consulta.filter_by(municipio_id=request.form["municipio"])
     # Luego filtrar por columnas de otras tablas
     # if "persona_rfc" in request.form:
     #     consulta = consulta.join(Persona)
@@ -105,9 +105,15 @@ def datatable_json():
 @personas.route("/personas")
 def list_active():
     """Listado de Personas activos"""
+    # Si el municipio del usuario es NO DEFINIDO no incluir el parámetro municipio en el filtrado de listado
+    municipio_no_definido = Municipio.query.filter_by(nombre="NO DEFINIDO").first()
+    filtro_municipio = {}
+    if current_user.municipio != municipio_no_definido:
+        filtro_municipio = {"municipio": current_user.municipio_id}
+    # Renderizar el listado
     return render_template(
         "personas/list.jinja2",
-        filtros=json.dumps({"estatus": "A", "municipio": current_user.municipio_id}),
+        filtros=json.dumps({**{"estatus": "A"}, **filtro_municipio}),
         titulo="Personas",
         situaciones=Persona.SITUACIONES,
         estatus="A",
@@ -115,12 +121,18 @@ def list_active():
 
 
 @personas.route("/personas/inactivos")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
+@permission_required(MODULO, Permiso.CREAR)
 def list_inactive():
     """Listado de Personas inactivos"""
+    # Si el municipio del usuario es NO DEFINIDO no incluir el parámetro municipio en el filtrado de listado
+    municipio_no_definido = Municipio.query.filter_by(nombre="NO DEFINIDO").first()
+    filtro_municipio = {}
+    if current_user.municipio != municipio_no_definido:
+        filtro_municipio = {"municipio": current_user.municipio_id}
+    # Renderizar el listado
     return render_template(
         "personas/list.jinja2",
-        filtros=json.dumps({"estatus": "B", "municipio": current_user.municipio_id}),
+        filtros=json.dumps({**{"estatus": "B"}, **filtro_municipio}),
         titulo="Personas inactivos",
         situaciones=Persona.SITUACIONES,
         estatus="B",
@@ -138,7 +150,13 @@ def detail(persona_id):
         .order_by(PersonaFotografia.modificado.desc())
         .first()
     )
-    if current_user.municipio_id != 1 and current_user.municipio != persona.municipio:
+    # identificar municipio NO DEFINIDO
+    municipio_no_definido = Municipio.query.filter(Municipio.nombre == "NO DEFINIDO").first()
+    if (
+        municipio_no_definido is None
+        or current_user.municipio != municipio_no_definido
+        and current_user.municipio != persona.municipio
+    ):
         abort(403)
     return render_template("personas/detail.jinja2", persona=persona, fotografia=fotografia)
 
@@ -146,7 +164,7 @@ def detail(persona_id):
 @personas.route("/personas/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():
-    """Nuevo Persana"""
+    """Nueva Persona"""
     form = PersonaForm()
     if form.validate_on_submit():
         es_valido = True
