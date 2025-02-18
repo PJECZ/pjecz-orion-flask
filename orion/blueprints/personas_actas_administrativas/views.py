@@ -15,6 +15,7 @@ from orion.blueprints.modulos.models import Modulo
 from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.personas_actas_administrativas.models import PersonaActaAdministrativa
+from orion.blueprints.personas_actas_administrativas.forms import PersonaActaAdministrativaForm
 from orion.blueprints.personas.models import Persona
 
 MODULO = "PERSONAS ACTAS ADMINISTRATIVAS"
@@ -113,4 +114,105 @@ def detail(persona_acta_administrativa_id):
     persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
     return render_template(
         "personas_actas_administrativas/detail.jinja2", persona_acta_administrativa=persona_acta_administrativa
+    )
+
+
+@personas_actas_administrativas.route(
+    "/personas_actas_administrativas/nuevo_con_persona/<int:persona_id>", methods=["GET", "POST"]
+)
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_persona_id(persona_id):
+    """Nuevo Acta Administrativa"""
+    persona = Persona.query.get_or_404(persona_id)
+    form = PersonaActaAdministrativaForm()
+    if form.validate_on_submit():
+        persona_acta_administrativa = PersonaActaAdministrativa(
+            persona=persona,
+            fecha=form.fecha.data,
+            falta=safe_string(form.falta.data),
+            sancion=safe_string(form.sancion.data),
+        )
+        persona_acta_administrativa.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Acta Administrativa {persona_acta_administrativa.fecha}"),
+            url=url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    # Mostrar valores de los campos
+    form.persona.data = persona.nombre_completo
+    return render_template("personas_actas_administrativas/new_with_persona_id.jinja2", form=form, persona=persona)
+
+
+@personas_actas_administrativas.route(
+    "/personas_actas_administrativas/edicion/<int:persona_acta_administrativa_id>", methods=["GET", "POST"]
+)
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(persona_acta_administrativa_id):
+    """Editar Acta Administrativa"""
+    persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
+    form = PersonaActaAdministrativaForm()
+    if form.validate_on_submit():
+        persona_acta_administrativa.fecha = form.fecha.data
+        persona_acta_administrativa.falta = safe_string(form.falta.data)
+        persona_acta_administrativa.sancion = safe_string(form.sancion.data)
+        persona_acta_administrativa.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Acta Administrativa {persona_acta_administrativa.id}"),
+            url=url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.persona.data = persona_acta_administrativa.persona.nombre_completo
+    form.fecha.data = persona_acta_administrativa.fecha
+    form.falta.data = persona_acta_administrativa.falta
+    form.sancion.data = persona_acta_administrativa.sancion
+    return render_template(
+        "personas_actas_administrativas/edit.jinja2", form=form, persona_acta_administrativa=persona_acta_administrativa
+    )
+
+
+@personas_actas_administrativas.route("/personas_actas_administrativas/eliminar/<int:persona_acta_administrativa_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(persona_acta_administrativa_id):
+    """Eliminar Acta Administrativa"""
+    persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
+    if persona_acta_administrativa.estatus == "A":
+        persona_acta_administrativa.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Acta Administrativa {persona_acta_administrativa.id}"),
+            url=url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(
+        url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id)
+    )
+
+
+@personas_actas_administrativas.route("/personas_actas_administrativas/recuperar/<int:persona_acta_administrativa_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(persona_acta_administrativa_id):
+    """Recuperar Acta Administrativa"""
+    persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
+    if persona_acta_administrativa.estatus == "B":
+        persona_acta_administrativa.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Acta Administrativa {persona_acta_administrativa.id}"),
+            url=url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(
+        url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id)
     )

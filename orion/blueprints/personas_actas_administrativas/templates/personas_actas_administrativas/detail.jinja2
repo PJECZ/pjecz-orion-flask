@@ -1,0 +1,37 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Acta Administrativa {{ persona_acta_administrativa.id }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Acta Administrativa ' + persona_acta_administrativa.id | string ) %}
+        {{ topbar.button_previous('Persona', url_for('personas.detail_section', seccion='actas_administrativas', persona_id=persona_acta_administrativa.persona_id)) }}
+        {{ topbar.button_previous('Actas Administrativas', url_for('personas_actas_administrativas.list_active')) }}
+        {% if current_user.can_edit('PERSONAS ACTAS ADMINISTRATIVAS') %}
+            {{ topbar.button_edit('Editar', url_for('personas_actas_administrativas.edit', persona_acta_administrativa_id=persona_acta_administrativa.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('PERSONAS ACTAS ADMINISTRATIVAS') %}
+            {% if persona_acta_administrativa.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('personas_actas_administrativas.delete', persona_acta_administrativa_id=persona_acta_administrativa.id)) }}{% endif %}
+            {% if persona_acta_administrativa.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('personas_actas_administrativas.recover', persona_acta_administrativa_id=persona_acta_administrativa.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=persona_acta_administrativa.estatus) %}
+        {{ detail.label_value('Persona', persona_acta_administrativa.persona.nombre_completo, url_for('personas.detail', persona_id=persona_acta_administrativa.persona_id)) }}
+        {{ detail.label_value('Fecha', persona_acta_administrativa.fecha) }}
+        {{ detail.label_value('Falta', persona_acta_administrativa.falta) }}
+        {{ detail.label_value('Sanción', persona_acta_administrativa.sancion) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('PERSONAS ACTAS ADMINISTRATIVAS') %}
+        {% if persona_acta_administrativa.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar el acta administrativa?') }}{% endif %}
+        {% if persona_acta_administrativa.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar el acta administrativa?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}
