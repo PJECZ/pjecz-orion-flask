@@ -107,13 +107,13 @@ def list_active():
     """Listado de Personas activos"""
     # Si el municipio del usuario es NO DEFINIDO no incluir el parámetro municipio en el filtrado de listado
     municipio_no_definido = Municipio.query.filter_by(nombre="NO DEFINIDO").first()
-    filtro_municipio = {}
+    filtros = {"estatus": "A"}
     if current_user.municipio != municipio_no_definido:
-        filtro_municipio = {"municipio": current_user.municipio_id}
+        filtros["municipio"] = current_user.municipio_id
     # Renderizar el listado
     return render_template(
         "personas/list.jinja2",
-        filtros=json.dumps({**{"estatus": "A"}, **filtro_municipio}),
+        filtros=json.dumps(filtros),
         titulo="Personas",
         situaciones=Persona.SITUACIONES,
         estatus="A",
@@ -126,13 +126,13 @@ def list_inactive():
     """Listado de Personas inactivos"""
     # Si el municipio del usuario es NO DEFINIDO no incluir el parámetro municipio en el filtrado de listado
     municipio_no_definido = Municipio.query.filter_by(nombre="NO DEFINIDO").first()
-    filtro_municipio = {}
+    filtros = {"estatus": "B"}
     if current_user.municipio != municipio_no_definido:
-        filtro_municipio = {"municipio": current_user.municipio_id}
+        filtros["municipio"] = current_user.municipio_id
     # Renderizar el listado
     return render_template(
         "personas/list.jinja2",
-        filtros=json.dumps({**{"estatus": "B"}, **filtro_municipio}),
+        filtros=json.dumps(filtros),
         titulo="Personas inactivos",
         situaciones=Persona.SITUACIONES,
         estatus="B",
