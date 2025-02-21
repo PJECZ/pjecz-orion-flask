@@ -106,10 +106,11 @@ def datatable_json():
 def list_active():
     """Listado de Personas activos"""
     # Si el municipio del usuario es NO DEFINIDO no incluir el parámetro municipio en el filtrado de listado
-    municipio_no_definido = Municipio.query.filter_by(nombre="NO DEFINIDO").first()
     filtros = {"estatus": "A"}
-    if current_user.municipio != municipio_no_definido:
-        filtros["municipio"] = current_user.municipio_id
+    municipio_no_definido = Municipio.query.filter_by(nombre="NO DEFINIDO").first()
+    if municipio_no_definido is not None:
+        if current_user.municipio != municipio_no_definido:
+            filtros["municipio"] = current_user.municipio_id
     # Renderizar el listado
     return render_template(
         "personas/list.jinja2",
@@ -125,10 +126,11 @@ def list_active():
 def list_inactive():
     """Listado de Personas inactivos"""
     # Si el municipio del usuario es NO DEFINIDO no incluir el parámetro municipio en el filtrado de listado
-    municipio_no_definido = Municipio.query.filter_by(nombre="NO DEFINIDO").first()
     filtros = {"estatus": "B"}
-    if current_user.municipio != municipio_no_definido:
-        filtros["municipio"] = current_user.municipio_id
+    municipio_no_definido = Municipio.query.filter_by(nombre="NO DEFINIDO").first()
+    if municipio_no_definido is not None:
+        if current_user.municipio != municipio_no_definido:
+            filtros["municipio"] = current_user.municipio_id
     # Renderizar el listado
     return render_template(
         "personas/list.jinja2",
