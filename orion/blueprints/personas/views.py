@@ -6,7 +6,7 @@ import json
 import locale
 from datetime import date
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for, abort
 from flask_login import current_user, login_required
 from sqlalchemy import or_
 
@@ -19,6 +19,7 @@ from orion.blueprints.personas.models import Persona
 from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.personas_domicilios.models import PersonaDomicilio
 from orion.blueprints.personas_fotografias.models import PersonaFotografia
+from orion.blueprints.municipios.models import Municipio
 from orion.blueprints.personas.forms import (
     PersonaForm,
     PersonaEditDomicilioFiscalForm,
@@ -71,6 +72,8 @@ def datatable_json():
                 )
     if "situacion" in request.form:
         consulta = consulta.filter_by(situacion=request.form["situacion"])
+    if "municipio" in request.form:
+        consulta = consulta.filter_by(municipio_id=request.form["municipio"])
     # Luego filtrar por columnas de otras tablas
     # if "persona_rfc" in request.form:
     #     consulta = consulta.join(Persona)
@@ -102,9 +105,16 @@ def datatable_json():
 @personas.route("/personas")
 def list_active():
     """Listado de Personas activos"""
+    # Si el municipio del usuario es NO DEFINIDO no incluir el parámetro municipio en el filtrado de listado
+    filtros = {"estatus": "A"}
+    municipio_no_definido = Municipio.query.filter_by(nombre="NO DEFINIDO").first()
+    if municipio_no_definido is not None:
+        if current_user.municipio != municipio_no_definido:
+            filtros["municipio"] = current_user.municipio_id
+    # Renderizar el listado
     return render_template(
         "personas/list.jinja2",
-        filtros=json.dumps({"estatus": "A"}),
+        filtros=json.dumps(filtros),
         titulo="Personas",
         situaciones=Persona.SITUACIONES,
         estatus="A",
@@ -112,12 +122,19 @@ def list_active():
 
 
 @personas.route("/personas/inactivos")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
+@permission_required(MODULO, Permiso.CREAR)
 def list_inactive():
     """Listado de Personas inactivos"""
+    # Si el municipio del usuario es NO DEFINIDO no incluir el parámetro municipio en el filtrado de listado
+    filtros = {"estatus": "B"}
+    municipio_no_definido = Municipio.query.filter_by(nombre="NO DEFINIDO").first()
+    if municipio_no_definido is not None:
+        if current_user.municipio != municipio_no_definido:
+            filtros["municipio"] = current_user.municipio_id
+    # Renderizar el listado
     return render_template(
         "personas/list.jinja2",
-        filtros=json.dumps({"estatus": "B"}),
+        filtros=json.dumps(filtros),
         titulo="Personas inactivos",
         situaciones=Persona.SITUACIONES,
         estatus="B",
@@ -135,13 +152,21 @@ def detail(persona_id):
         .order_by(PersonaFotografia.modificado.desc())
         .first()
     )
+    # identificar municipio NO DEFINIDO
+    municipio_no_definido = Municipio.query.filter(Municipio.nombre == "NO DEFINIDO").first()
+    if (
+        municipio_no_definido is None
+        or current_user.municipio != municipio_no_definido
+        and current_user.municipio != persona.municipio
+    ):
+        abort(403)
     return render_template("personas/detail.jinja2", persona=persona, fotografia=fotografia)
 
 
 @personas.route("/personas/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():
-    """Nuevo Persana"""
+    """Nueva Persona"""
     form = PersonaForm()
     if form.validate_on_submit():
         es_valido = True
@@ -194,6 +219,7 @@ def new():
             sexo=form.sexo.data,
             curp=curp,
             rfc=rfc,
+            municipio_id=form.municipio.data,
             email=email,
             telefono_trabajo=safe_string(form.telefono_trabajo.data),
             telefono_trabajo_extension=safe_string(form.telefono_trabajo_extension.data),
@@ -417,6 +443,7 @@ def edit_datos_generales(persona_id):
             persona.sexo = form.sexo.data
             persona.rfc = rfc
             persona.curp = curp
+            persona.municipio_id = form.municipio.data
             persona.email = email
             persona.telefono_trabajo = safe_string(form.telefono_trabajo.data)
             persona.telefono_trabajo_extension = safe_string(form.telefono_trabajo_extension.data)
@@ -442,6 +469,7 @@ def edit_datos_generales(persona_id):
     form.sexo.data = persona.sexo
     form.rfc.data = persona.rfc
     form.curp.data = persona.curp
+    form.municipio.data = persona.municipio_id
     form.email.data = persona.email
     form.telefono_trabajo.data = persona.telefono_trabajo
     form.telefono_trabajo_extension.data = persona.telefono_trabajo_extension

@@ -82,6 +82,8 @@ class Persona(database.Model, UniversalMixin):
     carrera: Mapped["Carrera"] = relationship(back_populates="personas")
     nivel_estudios_max_id: Mapped[int] = mapped_column(ForeignKey("niveles_academicos.id"))
     nivel_estudios_max: Mapped["NivelAcademico"] = relationship(back_populates="personas")
+    municipio_id: Mapped[int] = mapped_column(ForeignKey("municipios.id"))
+    municipio: Mapped["Municipio"] = relationship(back_populates="personas")
 
     # Columnas
     nombres: Mapped[str] = mapped_column(String(128))

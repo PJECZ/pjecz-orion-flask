@@ -329,6 +329,7 @@ def new():
             apellido_materno=safe_string(form.apellido_materno.data, save_enie=True),
             curp=safe_string(form.curp.data),
             puesto=safe_string(form.puesto.data),
+            municipio_id=form.municipio.data,
             api_key="",
             api_key_expiracion=datetime(year=2000, month=1, day=1, hour=0, minute=0, second=0),
             contrasena=generar_contrasena(),
@@ -371,6 +372,7 @@ def edit(usuario_id):
             usuario.apellido_materno = safe_string(form.apellido_materno.data, save_enie=True)
             usuario.curp = safe_string(form.curp.data)
             usuario.puesto = safe_string(form.puesto.data)
+            usuario.municipio_id = form.municipio.data
             usuario.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -387,6 +389,7 @@ def edit(usuario_id):
     form.apellido_materno.data = usuario.apellido_materno
     form.curp.data = usuario.curp
     form.puesto.data = usuario.puesto
+    form.municipio.data = usuario.municipio_id
     return render_template("usuarios/edit.jinja2", form=form, usuario=usuario)
 
 

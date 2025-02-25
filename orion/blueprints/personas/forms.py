@@ -9,6 +9,7 @@ from wtforms.validators import DataRequired, Length, Optional, Email
 from orion.blueprints.carreras.models import Carrera
 from orion.blueprints.niveles_academicos.models import NivelAcademico
 from orion.blueprints.personas.models import Persona
+from orion.blueprints.municipios.models import Municipio
 
 
 class PersonaForm(FlaskForm):
@@ -20,6 +21,7 @@ class PersonaForm(FlaskForm):
     sexo = SelectField("Sexo", choices=Persona.SEXOS.items(), validators=[DataRequired()])
     curp = StringField("CURP", validators=[Optional()])
     rfc = StringField("RFC", validators=[Optional()])
+    municipio = SelectField("Municipio", coerce=int, validators=[Optional()])
     email = StringField("e-mail", validators=[Optional(), Email()])
     telefono_trabajo = StringField("Teléfono del Trabajo", validators=[Length(max=64)])
     telefono_trabajo_extension = StringField("Teléfono del Trabajo Extensión", validators=[Length(max=16)])
@@ -31,6 +33,14 @@ class PersonaForm(FlaskForm):
     numero_empleado = IntegerField("Número de Empleado", validators=[Optional()])
     falta_papeleria = BooleanField("Le falta papelería")
     guardar = SubmitField("Guardar")
+
+    def __init__(self, *args, **kwargs):
+        """Inicializar y cargar opciones de Municipios"""
+        super().__init__(*args, **kwargs)
+        # Municipios
+        self.municipio.choices = [
+            (r.id, f"{r.clave}: {r.nombre}") for r in Municipio.query.filter_by(estatus="A").order_by(Municipio.clave).all()
+        ]
 
 
 class PersonaEditDomicilioFiscalForm(FlaskForm):
@@ -98,6 +108,7 @@ class PersonaEditDatosGeneralesForm(FlaskForm):
     sexo = SelectField("Sexo", choices=Persona.SEXOS.items(), validators=[DataRequired()])
     curp = StringField("CURP")
     rfc = StringField("RFC")
+    municipio = SelectField("Municipio", coerce=int, validators=[Optional()])
     email = StringField("e-mail", validators=[Optional(), Email()])
     telefono_trabajo = StringField("Teléfono del Trabajo", validators=[Length(max=64)])
     telefono_trabajo_extension = StringField("Teléfono del Trabajo Extensión", validators=[Length(max=16)])
@@ -107,6 +118,14 @@ class PersonaEditDatosGeneralesForm(FlaskForm):
     numero_empleado = IntegerField("Número de Empleado", validators=[Optional()])
     falta_papeleria = BooleanField("Le falta papelería")
     guardar = SubmitField("Guardar")
+
+    def __init__(self, *args, **kwargs):
+        """Inicializar y cargar opciones de Municipios"""
+        super().__init__(*args, **kwargs)
+        # Municipios
+        self.municipio.choices = [
+            (r.id, f"{r.clave}: {r.nombre}") for r in Municipio.query.filter_by(estatus="A").order_by(Municipio.clave).all()
+        ]
 
 
 class PersonaEditObservacionesForm(FlaskForm):

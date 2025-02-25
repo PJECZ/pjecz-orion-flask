@@ -27,7 +27,7 @@
         {{ detail.label_value('Nombre', usuario.nombre) }}
         {{ detail.label_value('CURP', usuario.curp) }}
         {{ detail.label_value('Puesto', usuario.puesto) }}
-        {# detail.label_value('Creado', moment(usuario.creado).format('llll')) #}
+        {{ detail.label_value('Municipio', usuario.municipio.clave_nombre, url_for("municipios.detail", municipio_id=usuario.municipio.id)) }}
     {% endcall %}
     {% if current_user.can_view('USUARIOS ROLES') %}
         {% call detail.card('Roles') %}

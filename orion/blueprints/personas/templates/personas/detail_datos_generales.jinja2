@@ -82,6 +82,7 @@
                 {{ detail.label_value('email', persona.email) }}
                 {{ detail.label_value('Teléfono del Trabajo', persona.telefono_trabajo) }}
                 {{ detail.label_value('Teléfono del Trabajo extensión', persona.telefono_trabajo_extension) }}
+                {{ detail.label_value('Municipio', persona.municipio.clave_nombre, url_for('municipios.detail', municipio_id=persona.municipio_id)) }}
             </div>
         </div>
     {% endcall %}
