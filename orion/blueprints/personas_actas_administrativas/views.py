@@ -6,6 +6,7 @@ import json
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import or_
+from werkzeug.datastructures import CombinedMultiDict
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_string, safe_message
@@ -18,9 +19,20 @@ from orion.blueprints.personas_actas_administrativas.models import PersonaActaAd
 from orion.blueprints.personas_actas_administrativas.forms import PersonaActaAdministrativaForm
 from orion.blueprints.personas.models import Persona
 
+from lib.exceptions import (
+    MyAnyError,
+    MyFilenameError,
+    MyMissingConfigurationError,
+    MyNotAllowedExtensionError,
+    MyUnknownExtensionError,
+)
+from lib.storage import GoogleCloudStorage
+
 MODULO = "PERSONAS ACTAS ADMINISTRATIVAS"
 
 personas_actas_administrativas = Blueprint("personas_actas_administrativas", __name__, template_folder="templates")
+
+SUBDIRECTORIO = "actas_administrativas"
 
 
 @personas_actas_administrativas.before_request
@@ -124,24 +136,91 @@ def detail(persona_acta_administrativa_id):
 def new_with_persona_id(persona_id):
     """Nuevo Acta Administrativa"""
     persona = Persona.query.get_or_404(persona_id)
-    form = PersonaActaAdministrativaForm()
+    form = PersonaActaAdministrativaForm(CombinedMultiDict((request.files, request.form)))
     if form.validate_on_submit():
-        persona_acta_administrativa = PersonaActaAdministrativa(
-            persona=persona,
-            fecha=form.fecha.data,
-            falta=safe_string(form.falta.data),
-            sancion=safe_string(form.sancion.data),
-        )
-        persona_acta_administrativa.save()
-        bitacora = Bitacora(
-            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-            usuario=current_user,
-            descripcion=safe_message(f"Nuevo Acta Administrativa {persona_acta_administrativa.fecha}"),
-            url=url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id),
-        )
-        bitacora.save()
-        flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+        # Guardar datos sin archivo
+        if request.files["archivo"].filename == "":
+            persona_acta_administrativa = PersonaActaAdministrativa(
+                persona=persona,
+                fecha=form.fecha.data,
+                falta=safe_string(form.falta.data),
+                sancion=safe_string(form.sancion.data),
+            )
+            persona_acta_administrativa.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Nuevo Acta Administrativa {persona_acta_administrativa.fecha}"),
+                url=url_for(
+                    "personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id
+                ),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+        else:
+            # Guardar cambios con un archivo adjunto
+            # Validaciones
+            es_valido = True
+            # Validar archivo
+            archivo = request.files["archivo"]
+            storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+            try:
+                storage.set_content_type(archivo.filename)
+            except MyNotAllowedExtensionError:
+                flash("Tipo de archivo no permitido.", "warning")
+                es_valido = False
+            except MyUnknownExtensionError:
+                flash("Tipo de archivo desconocido.", "warning")
+                es_valido = False
+            if es_valido:
+                # crear un nuevo registro
+                persona_acta_administrativa = PersonaActaAdministrativa(
+                    persona=persona,
+                    fecha=form.fecha.data,
+                    falta=safe_string(form.falta.data),
+                    sancion=safe_string(form.sancion.data),
+                )
+                persona_acta_administrativa.save()
+                # Subir a Google Cloud Storage
+                es_exitoso = True
+                try:
+                    storage.set_filename(hashed_id=persona_acta_administrativa.encode_id(), description="ACTA-ADMINISTRATIVA")
+                    storage.upload(archivo.stream.read())
+                except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
+                    flash("Error fatal al subir el archivo a GCS.", "warning")
+                    es_exitoso = False
+                except MyMissingConfigurationError:
+                    flash("Error al subir el archivo porque falla la configuración de GCS.", "danger")
+                    es_exitoso = False
+                except Exception:
+                    flash("Error desconocido al subir el archivo.", "danger")
+                    es_exitoso = False
+                # Remplazar archivo
+                if es_exitoso:
+                    persona_acta_administrativa.archivo = storage.filename
+                    persona_acta_administrativa.url = storage.url
+                    persona_acta_administrativa.save()
+                    # Salida en bitacora
+                    bitacora = Bitacora(
+                        modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                        usuario=current_user,
+                        descripcion=safe_message(f"Nueva Acta Administrativa {persona_acta_administrativa.id}"),
+                        url=url_for(
+                            "personas_actas_administrativas.detail",
+                            persona_acta_administrativa_id=persona_acta_administrativa.id,
+                        ),
+                    )
+                    bitacora.save()
+                    flash(bitacora.descripcion, "success")
+                    return redirect(bitacora.url)
+                else:
+                    return redirect(
+                        url_for(
+                            "personas_actas_administrativas.detail",
+                            persona_acta_administrativa_id=persona_acta_administrativa.id,
+                        )
+                    )
     # Mostrar valores de los campos
     form.persona.data = persona.nombre_completo
     return render_template("personas_actas_administrativas/new_with_persona_id.jinja2", form=form, persona=persona)
@@ -154,21 +233,95 @@ def new_with_persona_id(persona_id):
 def edit(persona_acta_administrativa_id):
     """Editar Acta Administrativa"""
     persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
-    form = PersonaActaAdministrativaForm()
+    form = PersonaActaAdministrativaForm(CombinedMultiDict((request.files, request.form)))
     if form.validate_on_submit():
-        persona_acta_administrativa.fecha = form.fecha.data
-        persona_acta_administrativa.falta = safe_string(form.falta.data)
-        persona_acta_administrativa.sancion = safe_string(form.sancion.data)
-        persona_acta_administrativa.save()
-        bitacora = Bitacora(
-            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-            usuario=current_user,
-            descripcion=safe_message(f"Editado Acta Administrativa {persona_acta_administrativa.id}"),
-            url=url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id),
-        )
-        bitacora.save()
-        flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+        # Guardar cambios sin modificar el archivo
+        if request.files["archivo"].filename == "":
+            persona_acta_administrativa.fecha = form.fecha.data
+            persona_acta_administrativa.falta = safe_string(form.falta.data)
+            persona_acta_administrativa.sancion = safe_string(form.sancion.data)
+            persona_acta_administrativa.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Acta Administrativa {persona_acta_administrativa.id}"),
+                url=url_for(
+                    "personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id
+                ),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+        else:
+            # Guardar cambios modificando el archivo adjunto
+            es_valido = True
+            # Validar archivo
+            archivo = request.files["archivo"]
+            storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+            try:
+                storage.set_content_type(archivo.filename)
+            except MyNotAllowedExtensionError:
+                flash("Tipo de archivo no permitido.", "warning")
+                es_valido = False
+            except MyUnknownExtensionError:
+                flash("Tipo de archivo desconocido.", "warning")
+                es_valido = False
+            if es_valido:
+                # Eliminar y crear un nuevo registro para el remplazo
+                persona_acta_administrativa.delete()
+                # Crear nuevo registro
+                persona_acta_administrativa_new = PersonaActaAdministrativa(
+                    persona=persona_acta_administrativa.persona,
+                    fecha=form.fecha.data,
+                    falta=safe_string(form.falta.data),
+                    sancion=safe_string(form.sancion.data),
+                )
+                persona_acta_administrativa_new.save()
+                # Subir a Google Cloud Storage
+                es_exitoso = True
+                try:
+                    storage.set_filename(
+                        hashed_id=persona_acta_administrativa_new.encode_id(), description="ACTA-ADMINISTRATIVA"
+                    )
+                    storage.upload(archivo.stream.read())
+                except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
+                    flash("Error fatal al subir el archivo a GCS.", "warning")
+                    es_exitoso = False
+                except MyMissingConfigurationError:
+                    flash("Error al subir el archivo porque falla la configuración de GCS.", "danger")
+                    es_exitoso = False
+                except Exception:
+                    flash("Error desconocido al subir el archivo.", "danger")
+                    es_exitoso = False
+                # Remplazar archivo
+                if es_exitoso:
+                    persona_acta_administrativa_new.archivo = storage.filename
+                    persona_acta_administrativa_new.url = storage.url
+                    persona_acta_administrativa_new.save()
+                    # Salida en bitacora
+                    bitacora = Bitacora(
+                        modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                        usuario=current_user,
+                        descripcion=safe_message(
+                            f"Editado Licencia {persona_acta_administrativa_new.id}, se dio de baja {persona_acta_administrativa.id}"
+                        ),
+                        url=url_for(
+                            "personas_actas_administrativas.detail",
+                            persona_acta_administrativa_id=persona_acta_administrativa_new.id,
+                        ),
+                    )
+                    bitacora.save()
+                    flash(bitacora.descripcion, "success")
+                    return redirect(bitacora.url)
+                else:
+                    persona_acta_administrativa_new.delete()
+                    persona_acta_administrativa.recover()
+                    return redirect(
+                        url_for(
+                            "personas_actas_administrativas.detail",
+                            persona_acta_administrativa_id=persona_acta_administrativa.id,
+                        )
+                    )
     form.persona.data = persona_acta_administrativa.persona.nombre_completo
     form.fecha.data = persona_acta_administrativa.fecha
     form.falta.data = persona_acta_administrativa.falta

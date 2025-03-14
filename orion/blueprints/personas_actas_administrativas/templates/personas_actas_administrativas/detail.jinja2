@@ -26,6 +26,17 @@
         {{ detail.label_value('Falta', persona_acta_administrativa.falta) }}
         {{ detail.label_value('Sanción', persona_acta_administrativa.sancion) }}
     {% endcall %}
+    {% if persona_acta_administrativa.archivo %}
+        {% call detail.card('Vista previa del archivo') %}
+            <!-- Preview del archivo -->
+            {% if persona_acta_administrativa.type_format(persona_acta_administrativa.archivo) == "IMG" %}
+                <a href="{{ persona_acta_administrativa.url }}"><img src="{{ persona_acta_administrativa.url }}" style="max-width: 500px; height: auto;"/></a>
+            {% endif %}
+            {% if persona_acta_administrativa.type_format(persona_acta_administrativa.archivo) == "PDF" %}
+                <object data="{{ persona_acta_administrativa.url }}" type="application/pdf" width="100%" height="600"></object>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}

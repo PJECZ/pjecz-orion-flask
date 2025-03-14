@@ -23,7 +23,7 @@ class LicenciaForm(FlaskForm):
     )
     dias = IntegerField("Días")
     motivo = StringField("Motivo", validators=[DataRequired()])
-    archivo = FileField("Archivo Adjunto o Imagen", validators=[Optional()])
+    archivo = FileField("Archivo Adjunto", validators=[Optional()])
     guardar = SubmitField("Guardar")
 
 
@@ -41,5 +41,5 @@ class LicenciaWithPersonaForm(FlaskForm):
     )
     dias = IntegerField("Días")
     motivo = StringField("Motivo", validators=[DataRequired()])
-    archivo = FileField("Archivo Adjunto o Imagen", validators=[Optional()])
+    archivo = FileField("Archivo Adjunto", validators=[Optional()])
     guardar = SubmitField("Guardar")

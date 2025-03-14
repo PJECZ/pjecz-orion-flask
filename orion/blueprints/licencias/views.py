@@ -345,6 +345,7 @@ def edit(licencia_id):
     licencia = Licencia.query.get_or_404(licencia_id)
     form = LicenciaWithPersonaForm(CombinedMultiDict((request.files, request.form)))
     if form.validate_on_submit():
+        # Validaciones
         es_valido = True
         # Validar fecha
         if form.fecha_inicio.data > form.fecha_termino.data:
