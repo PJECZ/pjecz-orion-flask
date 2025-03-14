@@ -3,9 +3,9 @@ Personas Nombramientos, modelos
 """
 
 from datetime import date
-from typing import List, Optional
+from typing import Optional
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
