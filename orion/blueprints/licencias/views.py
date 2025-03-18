@@ -145,7 +145,7 @@ def new():
         es_valido = True
         if form.fecha_termino.data < form.fecha_inicio.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
-            return render_template("licencias/new.jinja2", form=form)
+            es_valido = False
         if es_valido:
             # Leer el historial de puestos para extraer el nombre del puesto en esa fecha.
             historial_puesto = HistorialPuesto.query.filter_by(persona_id=form.persona.data).filter_by(estatus="A")

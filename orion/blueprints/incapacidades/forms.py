@@ -3,7 +3,7 @@ Incapacidades, formularios
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectField, DateField, IntegerField
+from wtforms import StringField, SubmitField, SelectField, DateField, IntegerField, FileField
 from wtforms.validators import DataRequired, Length, Optional
 
 from orion.blueprints.incapacidades.models import Incapacidad
@@ -19,6 +19,7 @@ class IncapacidadForm(FlaskForm):
     clave_incapacidad = StringField("Clave Incapacidad", validators=[DataRequired()])
     region = SelectField("Región", choices=Incapacidad.REGIONES.items(), validators=[DataRequired()])
     motivo = StringField("Motivo", validators=[DataRequired()])
+    archivo = FileField("Archivo Adjunto", validators=[Optional()])
     guardar = SubmitField("Guardar")
 
 
@@ -32,4 +33,5 @@ class IncapacidadWithPersonaForm(FlaskForm):
     clave_incapacidad = StringField("Clave Incapacidad", validators=[DataRequired()])
     region = SelectField("Región", choices=Incapacidad.REGIONES.items(), validators=[DataRequired()])
     motivo = StringField("Motivo", validators=[DataRequired()])
+    archivo = FileField("Archivo Adjunto", validators=[Optional()])
     guardar = SubmitField("Guardar")
