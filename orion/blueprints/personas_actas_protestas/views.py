@@ -1,5 +1,5 @@
 """
-Persona Actas Administrativas, vistas
+Personas-ActasProtestas, vistas
 """
 
 import json
@@ -15,8 +15,8 @@ from orion.blueprints.bitacoras.models import Bitacora
 from orion.blueprints.modulos.models import Modulo
 from orion.blueprints.permisos.models import Permiso
 from orion.blueprints.usuarios.decorators import permission_required
-from orion.blueprints.personas_actas_administrativas.models import PersonaActaAdministrativa
-from orion.blueprints.personas_actas_administrativas.forms import PersonaActaAdministrativaForm
+from orion.blueprints.personas_actas_protestas.models import PersonaActaProtesta
+from orion.blueprints.personas_actas_protestas.forms import PersonasActasProtestasForm
 from orion.blueprints.personas.models import Persona
 
 from lib.exceptions import (
@@ -28,34 +28,34 @@ from lib.exceptions import (
 )
 from lib.storage import GoogleCloudStorage
 
-MODULO = "PERSONAS ACTAS ADMINISTRATIVAS"
+MODULO = "PERSONAS ACTAS PROTESTAS"
 
-personas_actas_administrativas = Blueprint("personas_actas_administrativas", __name__, template_folder="templates")
+personas_actas_protestas = Blueprint("personas_actas_protestas", __name__, template_folder="templates")
 
-SUBDIRECTORIO = "actas_administrativas"
+SUBDIRECTORIO = "actas_protestas"
 
 
-@personas_actas_administrativas.before_request
+@personas_actas_protestas.before_request
 @login_required
 @permission_required(MODULO, Permiso.VER)
 def before_request():
     """Permiso por defecto"""
 
 
-@personas_actas_administrativas.route("/personas_actas_administrativas/datatable_json", methods=["GET", "POST"])
+@personas_actas_protestas.route("/personas_actas_protestas/datatable_json", methods=["GET", "POST"])
 def datatable_json():
-    """DataTable JSON para listado de Personas Acta Administrativa"""
+    """DataTable JSON para listado de Actas de Protestas"""
     # Tomar parámetros de Datatables
     draw, start, rows_per_page = get_datatable_parameters()
     # Consultar
-    consulta = PersonaActaAdministrativa.query
+    consulta = PersonaActaProtesta.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter(PersonaActaAdministrativa.estatus == request.form["estatus"])
+        consulta = consulta.filter(PersonaActaProtesta.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter(PersonaActaAdministrativa.estatus == "A")
+        consulta = consulta.filter(PersonaActaProtesta.estatus == "A")
     if "id" in request.form:
-        consulta = consulta.filter(PersonaActaAdministrativa.id == request.form["id"])
+        consulta = consulta.filter(PersonaActaProtesta.id == request.form["id"])
     # Luego filtrar por columnas de otras tablas
     if "persona_nombre_completo" in request.form:
         nombre_completo = safe_string(request.form["persona_nombre_completo"])
@@ -72,8 +72,7 @@ def datatable_json():
     if "persona_id" in request.form:
         consulta = consulta.join(Persona)
         consulta = consulta.filter(Persona.id == request.form["persona_id"])
-    # Ordenar y paginar
-    registros = consulta.order_by(PersonaActaAdministrativa.id.desc()).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(PersonaActaProtesta.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []
@@ -82,78 +81,70 @@ def datatable_json():
             {
                 "detalle": {
                     "id": resultado.id,
-                    "url": url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=resultado.id),
+                    "url": url_for("personas_actas_protestas.detail", persona_acta_protesta_id=resultado.id),
                 },
                 "persona": {
                     "nombre": resultado.persona.nombre_completo,
                     "url": url_for("personas.detail", persona_id=resultado.persona.id),
                 },
                 "fecha": resultado.fecha.strftime("%Y-%m-%d"),
-                "falta": resultado.falta,
-                "sancion": resultado.sancion,
+                "cargo": resultado.cargo,
             }
         )
     # Entregar JSON
     return output_datatable_json(draw, total, data)
 
 
-@personas_actas_administrativas.route("/personas_actas_administrativas")
+@personas_actas_protestas.route("/personas_actas_protestas")
 def list_active():
-    """Listado de Actas Administrativas activos"""
+    """Listado de Actas de Protesta activas"""
     return render_template(
-        "personas_actas_administrativas/list.jinja2",
+        "personas_actas_protestas/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
-        titulo="Actas Administrativas",
+        titulo="Actas de Protesta",
         estatus="A",
     )
 
 
-@personas_actas_administrativas.route("/personas_actas_administrativas/inactivos")
+@personas_actas_protestas.route("/personas_actas_protestas/inactivos")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
-    """Listado de Actas Administrativas inactivos"""
+    """Listado de Actas de Protestas inactivas"""
     return render_template(
-        "personas_actas_administrativas/list.jinja2",
+        "personas_actas_protestas/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
-        titulo="Actas Administrativas inactivos",
+        titulo="Actas de Protesta inactivas",
         estatus="B",
     )
 
 
-@personas_actas_administrativas.route("/personas_actas_administrativas/<int:persona_acta_administrativa_id>")
-def detail(persona_acta_administrativa_id):
+@personas_actas_protestas.route("/personas_actas_protestas/<int:persona_acta_protesta_id>")
+def detail(persona_acta_protesta_id):
     """Detalle de un Persona Acta Administrativa"""
-    persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
-    return render_template(
-        "personas_actas_administrativas/detail.jinja2", persona_acta_administrativa=persona_acta_administrativa
-    )
+    persona_acta_protesta = PersonaActaProtesta.query.get_or_404(persona_acta_protesta_id)
+    return render_template("personas_actas_protestas/detail.jinja2", persona_acta_protesta=persona_acta_protesta)
 
 
-@personas_actas_administrativas.route(
-    "/personas_actas_administrativas/nuevo_con_persona/<int:persona_id>", methods=["GET", "POST"]
-)
+@personas_actas_protestas.route("/personas_actas_protestas/nuevo_con_persona/<int:persona_id>", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new_with_persona_id(persona_id):
-    """Nuevo Acta Administrativa"""
+    """Nuevo Acta de Protesta con Persona ID"""
     persona = Persona.query.get_or_404(persona_id)
-    form = PersonaActaAdministrativaForm(CombinedMultiDict((request.files, request.form)))
+    form = PersonasActasProtestasForm(CombinedMultiDict((request.files, request.form)))
     if form.validate_on_submit():
         # Guardar datos sin archivo
         if request.files["archivo"].filename == "":
-            persona_acta_administrativa = PersonaActaAdministrativa(
+            persona_acta_protesta = PersonaActaProtesta(
                 persona=persona,
                 fecha=form.fecha.data,
-                falta=safe_string(form.falta.data),
-                sancion=safe_string(form.sancion.data),
+                cargo=safe_string(form.cargo.data),
             )
-            persona_acta_administrativa.save()
+            persona_acta_protesta.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Nuevo Acta Administrativa {persona_acta_administrativa.fecha}"),
-                url=url_for(
-                    "personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id
-                ),
+                descripcion=safe_message(f"Nueva Acta de Protesta {persona_acta_protesta.fecha}"),
+                url=url_for("personas_actas_protestas.detail", persona_acta_protesta_id=persona_acta_protesta.id),
             )
             bitacora.save()
             flash(bitacora.descripcion, "success")
@@ -175,17 +166,16 @@ def new_with_persona_id(persona_id):
                 es_valido = False
             if es_valido:
                 # crear un nuevo registro
-                persona_acta_administrativa = PersonaActaAdministrativa(
+                persona_acta_protesta = PersonaActaProtesta(
                     persona=persona,
                     fecha=form.fecha.data,
-                    falta=safe_string(form.falta.data),
-                    sancion=safe_string(form.sancion.data),
+                    cargo=safe_string(form.cargo.data),
                 )
-                persona_acta_administrativa.save()
+                persona_acta_protesta.save()
                 # Subir a Google Cloud Storage
                 es_exitoso = True
                 try:
-                    storage.set_filename(hashed_id=persona_acta_administrativa.encode_id(), description="ACTA-ADMINISTRATIVA")
+                    storage.set_filename(hashed_id=persona_acta_protesta.encode_id(), description="ACTA-PROTESTA")
                     storage.upload(archivo.stream.read())
                 except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
                     flash("Error fatal al subir el archivo a GCS.", "warning")
@@ -198,17 +188,17 @@ def new_with_persona_id(persona_id):
                     es_exitoso = False
                 # Remplazar archivo
                 if es_exitoso:
-                    persona_acta_administrativa.archivo = storage.filename
-                    persona_acta_administrativa.url = storage.url
-                    persona_acta_administrativa.save()
+                    persona_acta_protesta.archivo = storage.filename
+                    persona_acta_protesta.url = storage.url
+                    persona_acta_protesta.save()
                     # Salida en bitacora
                     bitacora = Bitacora(
                         modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                         usuario=current_user,
-                        descripcion=safe_message(f"Nueva Acta Administrativa {persona_acta_administrativa.id}"),
+                        descripcion=safe_message(f"Nueva Acta de Protesta {persona_acta_protesta.id}"),
                         url=url_for(
-                            "personas_actas_administrativas.detail",
-                            persona_acta_administrativa_id=persona_acta_administrativa.id,
+                            "personas_actas_protestas.detail",
+                            persona_acta_protesta_id=persona_acta_protesta.id,
                         ),
                     )
                     bitacora.save()
@@ -217,37 +207,32 @@ def new_with_persona_id(persona_id):
                 else:
                     return redirect(
                         url_for(
-                            "personas_actas_administrativas.detail",
-                            persona_acta_administrativa_id=persona_acta_administrativa.id,
+                            "personas_actas_protestas.detail",
+                            persona_acta_protesta_id=persona_acta_protesta.id,
                         )
                     )
     # Mostrar valores de los campos
     form.persona.data = persona.nombre_completo
-    return render_template("personas_actas_administrativas/new_with_persona_id.jinja2", form=form, persona=persona)
+    return render_template("personas_actas_protestas/new_with_persona_id.jinja2", form=form, persona=persona)
 
 
-@personas_actas_administrativas.route(
-    "/personas_actas_administrativas/edicion/<int:persona_acta_administrativa_id>", methods=["GET", "POST"]
-)
+@personas_actas_protestas.route("/personas_actas_protestas/edicion/<int:persona_acta_protesta_id>", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.MODIFICAR)
-def edit(persona_acta_administrativa_id):
-    """Editar Acta Administrativa"""
-    persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
-    form = PersonaActaAdministrativaForm(CombinedMultiDict((request.files, request.form)))
+def edit(persona_acta_protesta_id):
+    """Editar Acta de Protesta"""
+    persona_acta_protesta = PersonaActaProtesta.query.get_or_404(persona_acta_protesta_id)
+    form = PersonasActasProtestasForm(CombinedMultiDict((request.files, request.form)))
     if form.validate_on_submit():
         # Guardar cambios sin modificar el archivo
         if request.files["archivo"].filename == "":
-            persona_acta_administrativa.fecha = form.fecha.data
-            persona_acta_administrativa.falta = safe_string(form.falta.data)
-            persona_acta_administrativa.sancion = safe_string(form.sancion.data)
-            persona_acta_administrativa.save()
+            persona_acta_protesta.fecha = form.fecha.data
+            persona_acta_protesta.cargo = safe_string(form.cargo.data)
+            persona_acta_protesta.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Editado Acta Administrativa {persona_acta_administrativa.id}"),
-                url=url_for(
-                    "personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id
-                ),
+                descripcion=safe_message(f"Editado Acta de Protesta {persona_acta_protesta.id}"),
+                url=url_for("personas_actas_protestas.detail", persona_acta_protesta_id=persona_acta_protesta.id),
             )
             bitacora.save()
             flash(bitacora.descripcion, "success")
@@ -268,21 +253,18 @@ def edit(persona_acta_administrativa_id):
                 es_valido = False
             if es_valido:
                 # Eliminar y crear un nuevo registro para el remplazo
-                persona_acta_administrativa.delete()
+                persona_acta_protesta.delete()
                 # Crear nuevo registro
-                persona_acta_administrativa_new = PersonaActaAdministrativa(
-                    persona=persona_acta_administrativa.persona,
+                persona_acta_protesta_new = PersonaActaProtesta(
+                    persona=persona_acta_protesta.persona,
                     fecha=form.fecha.data,
-                    falta=safe_string(form.falta.data),
-                    sancion=safe_string(form.sancion.data),
+                    cargo=safe_string(form.cargo.data),
                 )
-                persona_acta_administrativa_new.save()
+                persona_acta_protesta_new.save()
                 # Subir a Google Cloud Storage
                 es_exitoso = True
                 try:
-                    storage.set_filename(
-                        hashed_id=persona_acta_administrativa_new.encode_id(), description="ACTA-ADMINISTRATIVA"
-                    )
+                    storage.set_filename(hashed_id=persona_acta_protesta_new.encode_id(), description="ACTA-PROTESTA")
                     storage.upload(archivo.stream.read())
                 except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
                     flash("Error fatal al subir el archivo a GCS.", "warning")
@@ -295,77 +277,67 @@ def edit(persona_acta_administrativa_id):
                     es_exitoso = False
                 # Remplazar archivo
                 if es_exitoso:
-                    persona_acta_administrativa_new.archivo = storage.filename
-                    persona_acta_administrativa_new.url = storage.url
-                    persona_acta_administrativa_new.save()
+                    persona_acta_protesta_new.archivo = storage.filename
+                    persona_acta_protesta_new.url = storage.url
+                    persona_acta_protesta_new.save()
                     # Salida en bitacora
                     bitacora = Bitacora(
                         modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                         usuario=current_user,
                         descripcion=safe_message(
-                            f"Editado Acta Administrativa {persona_acta_administrativa_new.id}, se dio de baja {persona_acta_administrativa.id}"
+                            f"Editado Acta de Protesta {persona_acta_protesta_new.id}, se dio de baja {persona_acta_protesta.id}"
                         ),
                         url=url_for(
-                            "personas_actas_administrativas.detail",
-                            persona_acta_administrativa_id=persona_acta_administrativa_new.id,
+                            "personas_actas_protestas.detail",
+                            persona_acta_protesta_id=persona_acta_protesta_new.id,
                         ),
                     )
                     bitacora.save()
                     flash(bitacora.descripcion, "success")
                     return redirect(bitacora.url)
                 else:
-                    persona_acta_administrativa_new.delete()
-                    persona_acta_administrativa.recover()
+                    persona_acta_protesta_new.delete()
+                    persona_acta_protesta.recover()
                     return redirect(
-                        url_for(
-                            "personas_actas_administrativas.detail",
-                            persona_acta_administrativa_id=persona_acta_administrativa.id,
-                        )
+                        url_for("personas_actas_protestas.detail", persona_acta_protesta_id=persona_acta_protesta.id)
                     )
-    form.persona.data = persona_acta_administrativa.persona.nombre_completo
-    form.fecha.data = persona_acta_administrativa.fecha
-    form.falta.data = persona_acta_administrativa.falta
-    form.sancion.data = persona_acta_administrativa.sancion
-    return render_template(
-        "personas_actas_administrativas/edit.jinja2", form=form, persona_acta_administrativa=persona_acta_administrativa
-    )
+    form.persona.data = persona_acta_protesta.persona.nombre_completo
+    form.fecha.data = persona_acta_protesta.fecha
+    form.cargo.data = persona_acta_protesta.cargo
+    return render_template("personas_actas_protestas/edit.jinja2", form=form, persona_acta_protesta=persona_acta_protesta)
 
 
-@personas_actas_administrativas.route("/personas_actas_administrativas/eliminar/<int:persona_acta_administrativa_id>")
+@personas_actas_protestas.route("/personas_actas_protestas/eliminar/<int:persona_acta_protesta_id>")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
-def delete(persona_acta_administrativa_id):
-    """Eliminar Acta Administrativa"""
-    persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
-    if persona_acta_administrativa.estatus == "A":
-        persona_acta_administrativa.delete()
+def delete(persona_acta_protesta_id):
+    """Eliminar Acta de Protesta"""
+    persona_acta_protesta = PersonaActaProtesta.query.get_or_404(persona_acta_protesta_id)
+    if persona_acta_protesta.estatus == "A":
+        persona_acta_protesta.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Eliminado Acta Administrativa {persona_acta_administrativa.id}"),
-            url=url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id),
+            descripcion=safe_message(f"Eliminado Acta Administrativa {persona_acta_protesta.id}"),
+            url=url_for("personas_actas_protestas.detail", persona_acta_protesta_id=persona_acta_protesta.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
-    return redirect(
-        url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id)
-    )
+    return redirect(url_for("personas_actas_protestas.detail", persona_acta_protesta_id=persona_acta_protesta.id))
 
 
-@personas_actas_administrativas.route("/personas_actas_administrativas/recuperar/<int:persona_acta_administrativa_id>")
+@personas_actas_protestas.route("/personas_actas_protestas/recuperar/<int:persona_acta_protesta_id>")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
-def recover(persona_acta_administrativa_id):
-    """Recuperar Acta Administrativa"""
-    persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
-    if persona_acta_administrativa.estatus == "B":
-        persona_acta_administrativa.recover()
+def recover(persona_acta_protesta_id):
+    """Recuperar Acta de Protesta"""
+    persona_acta_protesta = PersonaActaProtesta.query.get_or_404(persona_acta_protesta_id)
+    if persona_acta_protesta.estatus == "B":
+        persona_acta_protesta.recover()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Recuperado Acta Administrativa {persona_acta_administrativa.id}"),
-            url=url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id),
+            descripcion=safe_message(f"Recuperado Acta Administrativa {persona_acta_protesta.id}"),
+            url=url_for("personas_actas_protestas.detail", persona_acta_protesta_id=persona_acta_protesta.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
-    return redirect(
-        url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id)
-    )
+    return redirect(url_for("personas_actas_protestas.detail", persona_acta_protesta_id=persona_acta_protesta.id))

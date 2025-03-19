@@ -150,6 +150,7 @@ class Persona(database.Model, UniversalMixin):
     # pensiones_alimenticias = db.relationship("PersonaPensionAlimenticia", back_populates="persona")
     # personas_meritos = db.relationship("PersonaMerito", back_populates="persona")
     personas_actas_administrativas: Mapped[List["PersonaActaAdministrativa"]] = relationship(back_populates="persona")
+    personas_actas_protestas: Mapped[List["PersonaActaProtesta"]] = relationship(back_populates="persona")
     # personas_procedimientos_diciplinarios = db.relationship("PersonaProcedimientoDiciplinario", back_populates="persona")
     # personas_escalafones = db.relationship("PersonaEscalafon", back_populates="persona")
     adjuntos: Mapped[List["PersonaAdjunto"]] = relationship(back_populates="persona")

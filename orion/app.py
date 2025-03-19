@@ -28,6 +28,7 @@ from orion.blueprints.organos.views import organos
 from orion.blueprints.permisos.views import permisos
 from orion.blueprints.personas.views import personas
 from orion.blueprints.personas_actas_administrativas.views import personas_actas_administrativas
+from orion.blueprints.personas_actas_protestas.views import personas_actas_protestas
 from orion.blueprints.personas_adjuntos.views import personas_adjuntos
 from orion.blueprints.personas_domicilios.views import personas_domicilios
 from orion.blueprints.personas_fotografias.views import personas_fotografias
@@ -78,6 +79,7 @@ def create_app():
     app.register_blueprint(permisos)
     app.register_blueprint(personas)
     app.register_blueprint(personas_actas_administrativas)
+    app.register_blueprint(personas_actas_protestas)
     app.register_blueprint(personas_adjuntos)
     app.register_blueprint(personas_domicilios)
     app.register_blueprint(personas_fotografias)
