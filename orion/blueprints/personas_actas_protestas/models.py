@@ -1,19 +1,20 @@
 """
-Personas Nombramientos, modelos
+Personas Actas Protestas, modelos
 """
 
 from datetime import date
-from typing import Optional
+from typing import List, Optional
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import Date, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql.functions import now
 
 from lib.universal_mixin import UniversalMixin
 from orion.extensions import database
 
 
-class PersonaNombramiento(database.Model, UniversalMixin):
-    """PersonaNombramiento"""
+class PersonaActaProtesta(database.Model, UniversalMixin):
+    """PersonaActaProtesta"""
 
     # https://developer.mozilla.org/es/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
     EXTENSIONES = {
@@ -25,21 +26,18 @@ class PersonaNombramiento(database.Model, UniversalMixin):
     }
 
     # Nombre de la tabla
-    __tablename__ = "personas_nombramientos"
+    __tablename__ = "personas_actas_protestas"
 
     # Clave primaria
     id: Mapped[int] = mapped_column(primary_key=True)
 
     # Clave foránea
     persona_id: Mapped[int] = mapped_column(ForeignKey("personas.id"))
-    persona: Mapped["Persona"] = relationship(back_populates="nombramientos")
+    persona: Mapped["Persona"] = relationship(back_populates="personas_actas_protestas")
 
     # Columnas
-    cargo: Mapped[Optional[str]] = mapped_column(String(64))
-    centro_trabajo: Mapped[Optional[str]] = mapped_column(String(128))
-    tipo: Mapped[Optional[str]] = mapped_column(String(64))
-    fecha_inicio: Mapped[Optional[date]]
-    fecha_termino: Mapped[Optional[date]]
+    fecha: Mapped[date] = mapped_column(Date, default=now())
+    cargo: Mapped[Optional[str]] = mapped_column(String(256))
     archivo: Mapped[Optional[str]] = mapped_column(String(64))
     url: Mapped[Optional[str]] = mapped_column(String(512))
 
@@ -63,7 +61,7 @@ class PersonaNombramiento(database.Model, UniversalMixin):
 
     def set_extension(self, archivo_nombre):
         """Establece el tipo de extensión del archivo"""
-        extensiones_permitidas = PersonaNombramiento.EXTENSIONES.keys()
+        extensiones_permitidas = PersonaActaProtesta.EXTENSIONES.keys()
         if "." in archivo_nombre and archivo_nombre.rsplit(".", 1)[1] in extensiones_permitidas:
             self.extension = archivo_nombre.rsplit(".", 1)[1]
             return True
@@ -71,4 +69,4 @@ class PersonaNombramiento(database.Model, UniversalMixin):
 
     def __repr__(self):
         """Representación"""
-        return f"<PersonaNombramiento {self.id}>"
+        return f"<PersonaActaProtesta {self.id}>"

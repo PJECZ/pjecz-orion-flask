@@ -3,7 +3,7 @@ Licencias, formularios
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectField, RadioField, IntegerField, DateField
+from wtforms import StringField, SubmitField, SelectField, RadioField, IntegerField, DateField, FileField
 from wtforms.validators import DataRequired, Length, Optional
 
 from orion.blueprints.licencias.models import Licencia
@@ -23,6 +23,7 @@ class LicenciaForm(FlaskForm):
     )
     dias = IntegerField("Días")
     motivo = StringField("Motivo", validators=[DataRequired()])
+    archivo = FileField("Archivo Adjunto", validators=[Optional()])
     guardar = SubmitField("Guardar")
 
 
@@ -40,4 +41,5 @@ class LicenciaWithPersonaForm(FlaskForm):
     )
     dias = IntegerField("Días")
     motivo = StringField("Motivo", validators=[DataRequired()])
+    archivo = FileField("Archivo Adjunto", validators=[Optional()])
     guardar = SubmitField("Guardar")

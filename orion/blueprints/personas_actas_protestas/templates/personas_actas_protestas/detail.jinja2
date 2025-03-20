@@ -1,0 +1,46 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Acta de Protesta {{ persona_acta_protesta.id }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Acta de Protesta ' + persona_acta_protesta.id | string) %}
+        {{ topbar.button_previous('Actas de Protestas', url_for('personas_actas_protestas.list_active')) }}
+        {% if current_user.can_edit('PERSONAS ACTAS PROTESTAS') %}
+            {{ topbar.button_edit('Editar', url_for('personas_actas_protestas.edit', persona_acta_protesta_id=persona_acta_protesta.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('PERSONAS ACTAS PROTESTAS') %}
+            {% if persona_acta_protesta.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('personas_actas_protestas.delete', persona_acta_protesta_id=persona_acta_protesta.id)) }}{% endif %}
+            {% if persona_acta_protesta.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('personas_actas_protestas.recover', persona_acta_protesta_id=persona_acta_protesta.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=persona_acta_protesta.estatus) %}
+        {{ detail.label_value('Persona', persona_acta_protesta.persona.nombre_completo, url_for('personas.detail', persona_id=persona_acta_protesta.persona_id)) }}
+        {{ detail.label_value('Fecha', persona_acta_protesta.fecha) }}
+        {{ detail.label_value('Cargo', persona_acta_protesta.cargo) }}
+    {% endcall %}
+    {% if persona_acta_protesta.archivo %}
+        {% call detail.card('Vista previa del archivo') %}
+            <!-- Preview del archivo -->
+            {% if persona_acta_protesta.type_format(persona_acta_protesta.archivo) == "IMG" %}
+                <a href="{{ persona_acta_protesta.url }}"><img src="{{ persona_acta_protesta.url }}" style="max-width: 500px; height: auto;"/></a>
+            {% endif %}
+            {% if persona_acta_protesta.type_format(persona_acta_protesta.archivo) == "PDF" %}
+                <object data="{{ persona_acta_protesta.url }}" type="application/pdf" width="100%" height="600"></object>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('PERSONAS ACTAS PROTESTAS') %}
+        {% if persona_acta_protesta.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar Acta de Protesta?') }}{% endif %}
+        {% if persona_acta_protesta.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar Acta de Protesta?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

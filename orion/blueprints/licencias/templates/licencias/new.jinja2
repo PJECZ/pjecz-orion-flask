@@ -5,6 +5,7 @@
 {% block title %}Nuevo Licencia{% endblock %}
 
 {% block custom_head %}
+    {{ f.drop_zone_css() }}
     <!-- Select2 bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://storage.googleapis.com/pjecz-informatica/static/css/select2.css" rel="stylesheet" />
@@ -16,7 +17,7 @@
 
 {% block content %}
     {% call f.card() %}
-        {% call f.form_tag('licencias.new', fid='licencia_form') %}
+        {% call f.form_tag_multipart('licencias.new', fid='licencia_form') %}
             {% call f.form_group(form.persona) %}{% endcall %}
             {% call f.form_group(form.tipo) %}{% endcall %}
             {% call f.form_group(form.fecha_inicio) %}{% endcall %}
@@ -24,12 +25,16 @@
             {% call f.form_group(form.dias, readonly=true) %}{% endcall %}
             {% call f.form_group(form.con_goce) %}{% endcall %}
             {% call f.form_group(form.motivo) %}{% endcall %}
+            {% call f.drop_zone_wrapper() %}
+                {% call f.form_group(form.archivo, class="dropzone") %}{% endcall %}
+            {% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ f.drop_zone_js() }}
     <!-- Select2 bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>

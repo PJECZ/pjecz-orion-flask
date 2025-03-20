@@ -6,6 +6,7 @@ import json
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import or_
+from werkzeug.datastructures import CombinedMultiDict
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_string, safe_message
@@ -19,9 +20,20 @@ from orion.blueprints.personas.models import Persona
 from orion.blueprints.incapacidades.forms import IncapacidadForm, IncapacidadWithPersonaForm
 from orion.blueprints.historial_puestos.models import HistorialPuesto
 
+from lib.exceptions import (
+    MyAnyError,
+    MyFilenameError,
+    MyMissingConfigurationError,
+    MyNotAllowedExtensionError,
+    MyUnknownExtensionError,
+)
+from lib.storage import GoogleCloudStorage
+
 MODULO = "INCAPACIDADES"
 
 incapacidades = Blueprint("incapacidades", __name__, template_folder="templates")
+
+SUBDIRECTORIO = "incapacidades"
 
 
 @incapacidades.before_request
@@ -125,10 +137,12 @@ def new():
     """Nuevo Incapacidad"""
     form = IncapacidadForm()
     if form.validate_on_submit():
+        # Validaciones
+        es_valido = True
         # Validar fecha
         if form.fecha_termino.data < form.fecha_inicio.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
-            return render_template("incapacidades/new.jinja2", form=form)
+            es_valido = False
         # Validar registro repetido
         registro_repetido = (
             Incapacidad.query.filter_by(persona_id=form.persona.data)
@@ -139,7 +153,7 @@ def new():
         )
         if registro_repetido:
             flash("Esta persona ya tiene una incapacidad en la misma fecha de inicio y término.", "warning")
-            return render_template("incapacidades/new.jinja2", form=form)
+            es_valido = False
         # Buscar puesto en historial de puestos
         puesto_nombre = None
         historial_puesto = HistorialPuesto.query.filter_by(persona_id=form.persona.data).filter_by(estatus="A")
@@ -147,26 +161,85 @@ def new():
         historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
         if historial_puesto:
             puesto_nombre = historial_puesto.puesto_funcion.nombre
-        # Guardar registro
-        incapacidad = Incapacidad(
-            persona_id=form.persona.data,
-            fecha_inicio=form.fecha_inicio.data,
-            fecha_termino=form.fecha_termino.data,
-            clave_incapacidad=safe_string(form.clave_incapacidad.data),
-            region=form.region.data,
-            motivo=safe_string(form.motivo.data, save_enie=True),
-            puesto_nombre=puesto_nombre,
-        )
-        incapacidad.save()
-        bitacora = Bitacora(
-            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-            usuario=current_user,
-            descripcion=safe_message(f"Nuevo Incapacidad {incapacidad.persona.nombre_completo}"),
-            url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
-        )
-        bitacora.save()
-        flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+        if es_valido:
+            # Guardar datos sin archivo
+            if request.files["archivo"].filename == "":
+                # Guardar la Licencia
+                incapacidad = Incapacidad(
+                    persona_id=form.persona.data,
+                    fecha_inicio=form.fecha_inicio.data,
+                    fecha_termino=form.fecha_termino.data,
+                    clave_incapacidad=safe_string(form.clave_incapacidad.data),
+                    region=form.region.data,
+                    motivo=safe_string(form.motivo.data, save_enie=True),
+                    puesto_nombre=puesto_nombre,
+                )
+                incapacidad.save()
+                bitacora = Bitacora(
+                    modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                    usuario=current_user,
+                    descripcion=safe_message(f"Nueva Incapacidad {incapacidad.persona.nombre_completo}"),
+                    url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
+                )
+                bitacora.save()
+                flash(bitacora.descripcion, "success")
+                return redirect(bitacora.url)
+            else:
+                # Guardar cambios con un archivo adjunto
+                # Validar archivo
+                archivo = request.files["archivo"]
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+                try:
+                    storage.set_content_type(archivo.filename)
+                except MyNotAllowedExtensionError:
+                    flash("Tipo de archivo no permitido.", "warning")
+                    es_valido = False
+                except MyUnknownExtensionError:
+                    flash("Tipo de archivo desconocido.", "warning")
+                    es_valido = False
+                if es_valido:
+                    # crear un nuevo registro
+                    incapacidad = Incapacidad(
+                        persona_id=form.persona.data,
+                        fecha_inicio=form.fecha_inicio.data,
+                        fecha_termino=form.fecha_termino.data,
+                        clave_incapacidad=safe_string(form.clave_incapacidad.data),
+                        region=form.region.data,
+                        motivo=safe_string(form.motivo.data, save_enie=True),
+                        puesto_nombre=puesto_nombre,
+                    )
+                    incapacidad.save()
+                    # Subir a Google Cloud Storage
+                    es_exitoso = True
+                    try:
+                        storage.set_filename(hashed_id=incapacidad.encode_id(), description="INCAPACIDAD")
+                        storage.upload(archivo.stream.read())
+                    except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
+                        flash("Error fatal al subir el archivo a GCS.", "warning")
+                        es_exitoso = False
+                    except MyMissingConfigurationError:
+                        flash("Error al subir el archivo porque falla la configuración de GCS.", "danger")
+                        es_exitoso = False
+                    except Exception:
+                        flash("Error desconocido al subir el archivo.", "danger")
+                        es_exitoso = False
+                    # Remplazar archivo
+                    if es_exitoso:
+                        incapacidad.archivo = storage.filename
+                        incapacidad.url = storage.url
+                        incapacidad.save()
+                        # Salida en bitacora
+                        bitacora = Bitacora(
+                            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                            usuario=current_user,
+                            descripcion=safe_message(f"Nueva incapacidad {incapacidad.id}"),
+                            url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
+                        )
+                        bitacora.save()
+                        flash(bitacora.descripcion, "success")
+                        return redirect(bitacora.url)
+                    else:
+                        return redirect(url_for("incapacidades.detail", incapacidad_id=incapacidad.id))
     return render_template("incapacidades/new.jinja2", form=form)
 
 
@@ -177,10 +250,12 @@ def new_with_persona_id(persona_id):
     persona = Persona.query.get_or_404(persona_id)
     form = IncapacidadWithPersonaForm()
     if form.validate_on_submit():
+        # Validaciones
+        es_valido = True
         # Validar fecha
         if form.fecha_termino.data < form.fecha_inicio.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
-            return render_template("incapacidades/new_with_persona_id.jinja2", form=form, persona=persona)
+            es_valido = False
         # Validar registro repetido
         registro_repetido = (
             Incapacidad.query.filter_by(persona=persona)
@@ -191,34 +266,93 @@ def new_with_persona_id(persona_id):
         )
         if registro_repetido:
             flash("Esta persona ya tiene una incapacidad en la misma fecha de inicio y término.", "warning")
-            return render_template("incapacidades/new_with_persona_id.jinja2", form=form, persona=persona)
-        # Buscar puesto en historial de puestos
-        puesto_nombre = None
-        historial_puesto = HistorialPuesto.query.filter_by(persona=persona).filter_by(estatus="A")
-        historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
-        historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
-        if historial_puesto:
-            puesto_nombre = historial_puesto.puesto_funcion.nombre
-        # Guardar registro
-        incapacidad = Incapacidad(
-            persona=persona,
-            fecha_inicio=form.fecha_inicio.data,
-            fecha_termino=form.fecha_termino.data,
-            clave_incapacidad=safe_string(form.clave_incapacidad.data),
-            region=form.region.data,
-            motivo=safe_string(form.motivo.data, save_enie=True),
-            puesto_nombre=puesto_nombre,
-        )
-        incapacidad.save()
-        bitacora = Bitacora(
-            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-            usuario=current_user,
-            descripcion=safe_message(f"Nuevo Incapacidad {incapacidad.persona.nombre_completo}"),
-            url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
-        )
-        bitacora.save()
-        flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+            es_valido = False
+        if es_valido:
+            # Buscar puesto en historial de puestos
+            puesto_nombre = None
+            historial_puesto = HistorialPuesto.query.filter_by(persona=persona).filter_by(estatus="A")
+            historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+            historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+            if historial_puesto:
+                puesto_nombre = historial_puesto.puesto_funcion.nombre
+            # Guardar datos sin archivo
+            if request.files["archivo"].filename == "":
+                # Guardar registro
+                incapacidad = Incapacidad(
+                    persona=persona,
+                    fecha_inicio=form.fecha_inicio.data,
+                    fecha_termino=form.fecha_termino.data,
+                    clave_incapacidad=safe_string(form.clave_incapacidad.data),
+                    region=form.region.data,
+                    motivo=safe_string(form.motivo.data, save_enie=True),
+                    puesto_nombre=puesto_nombre,
+                )
+                incapacidad.save()
+                bitacora = Bitacora(
+                    modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                    usuario=current_user,
+                    descripcion=safe_message(f"Nuevo Incapacidad {incapacidad.persona.nombre_completo}"),
+                    url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
+                )
+                bitacora.save()
+                flash(bitacora.descripcion, "success")
+                return redirect(bitacora.url)
+            else:
+                # Guardar cambios con un archivo adjunto
+                # Validar archivo
+                archivo = request.files["archivo"]
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+                try:
+                    storage.set_content_type(archivo.filename)
+                except MyNotAllowedExtensionError:
+                    flash("Tipo de archivo no permitido.", "warning")
+                    es_valido = False
+                except MyUnknownExtensionError:
+                    flash("Tipo de archivo desconocido.", "warning")
+                    es_valido = False
+                if es_valido:
+                    # crear un nuevo registro
+                    incapacidad = Incapacidad(
+                        persona=persona,
+                        fecha_inicio=form.fecha_inicio.data,
+                        fecha_termino=form.fecha_termino.data,
+                        clave_incapacidad=safe_string(form.clave_incapacidad.data),
+                        region=form.region.data,
+                        motivo=safe_string(form.motivo.data, save_enie=True),
+                        puesto_nombre=puesto_nombre,
+                    )
+                    incapacidad.save()
+                    # Subir a Google Cloud Storage
+                    es_exitoso = True
+                    try:
+                        storage.set_filename(hashed_id=incapacidad.encode_id(), description="INCAPACIDAD")
+                        storage.upload(archivo.stream.read())
+                    except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
+                        flash("Error fatal al subir el archivo a GCS.", "warning")
+                        es_exitoso = False
+                    except MyMissingConfigurationError:
+                        flash("Error al subir el archivo porque falla la configuración de GCS.", "danger")
+                        es_exitoso = False
+                    except Exception:
+                        flash("Error desconocido al subir el archivo.", "danger")
+                        es_exitoso = False
+                    # Remplazar archivo
+                    if es_exitoso:
+                        incapacidad.archivo = storage.filename
+                        incapacidad.url = storage.url
+                        incapacidad.save()
+                        # Salida en bitacora
+                        bitacora = Bitacora(
+                            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                            usuario=current_user,
+                            descripcion=safe_message(f"Nueva Incapacidad {incapacidad.id}"),
+                            url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
+                        )
+                        bitacora.save()
+                        flash(bitacora.descripcion, "success")
+                        return redirect(bitacora.url)
+                    else:
+                        return redirect(url_for("incapacidades.detail", incapacidad_id=incapacidad.id))
     form.persona.data = persona.nombre_completo
     return render_template("incapacidades/new_with_persona_id.jinja2", form=form, persona=persona)
 
@@ -230,6 +364,7 @@ def edit(incapacidad_id):
     incapacidad = Incapacidad.query.get_or_404(incapacidad_id)
     form = IncapacidadWithPersonaForm()
     if form.validate_on_submit():
+        # Validaciones
         es_valido = True
         # Validar fecha
         if form.fecha_termino.data < form.fecha_inicio.data:
@@ -255,24 +390,88 @@ def edit(incapacidad_id):
             historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
             if historial_puesto:
                 puesto_nombre = historial_puesto.puesto_funcion.nombre
-            # Guardar cambios
-            incapacidad.fecha_inicio = form.fecha_inicio.data
-            incapacidad.fecha_termino = form.fecha_termino.data
-            incapacidad.clave_incapacidad = form.clave_incapacidad.data
-            incapacidad.region = form.region.data
-            incapacidad.motivo = safe_string(form.motivo.data, save_enie=True)
-            incapacidad.puesto = puesto_nombre
-            incapacidad.save()
-            bitacora = Bitacora(
-                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-                usuario=current_user,
-                descripcion=safe_message(f"Editado Incapacidad {incapacidad.motivo}"),
-                url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
-            )
-            bitacora.save()
-            flash(bitacora.descripcion, "success")
-            return redirect(bitacora.url)
-    # Cargar valores leidos
+            if request.files["archivo"].filename == "":
+                # Guardar cambios sin modificar el archivo
+                # Guardar cambios
+                incapacidad.fecha_inicio = form.fecha_inicio.data
+                incapacidad.fecha_termino = form.fecha_termino.data
+                incapacidad.clave_incapacidad = form.clave_incapacidad.data
+                incapacidad.region = form.region.data
+                incapacidad.motivo = safe_string(form.motivo.data, save_enie=True)
+                incapacidad.puesto = puesto_nombre
+                incapacidad.save()
+                bitacora = Bitacora(
+                    modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                    usuario=current_user,
+                    descripcion=safe_message(f"Editado Incapacidad {incapacidad.motivo}"),
+                    url=url_for("incapacidades.detail", incapacidad_id=incapacidad.id),
+                )
+                bitacora.save()
+                flash(bitacora.descripcion, "success")
+                return redirect(bitacora.url)
+            else:
+                # Guardar cambios modificando el archivo adjunto
+                # Validar archivo
+                archivo = request.files["archivo"]
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+                try:
+                    storage.set_content_type(archivo.filename)
+                except MyNotAllowedExtensionError:
+                    flash("Tipo de archivo no permitido.", "warning")
+                    es_valido = False
+                except MyUnknownExtensionError:
+                    flash("Tipo de archivo desconocido.", "warning")
+                    es_valido = False
+                if es_valido:
+                    # Eliminar y crear un nuevo registro para el remplazo
+                    incapacidad.delete()
+                    # Crear nuevo registro
+                    incapacidad_new = Incapacidad(
+                        persona=incapacidad.persona,
+                        fecha_inicio=form.fecha_inicio.data,
+                        fecha_termino=form.fecha_termino.data,
+                        clave_incapacidad=safe_string(form.clave_incapacidad.data),
+                        region=form.region.data,
+                        motivo=safe_string(form.motivo.data, save_enie=True),
+                        puesto_nombre=puesto_nombre,
+                    )
+                    incapacidad_new.save()
+                    # Subir a Google Cloud Storage
+                    es_exitoso = True
+                    try:
+                        storage.set_filename(hashed_id=incapacidad_new.encode_id(), description="INCAPACIDAD")
+                        storage.upload(archivo.stream.read())
+                    except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
+                        flash("Error fatal al subir el archivo a GCS.", "warning")
+                        es_exitoso = False
+                    except MyMissingConfigurationError:
+                        flash("Error al subir el archivo porque falla la configuración de GCS.", "danger")
+                        es_exitoso = False
+                    except Exception:
+                        flash("Error desconocido al subir el archivo.", "danger")
+                        es_exitoso = False
+                    # Remplazar archivo
+                    if es_exitoso:
+                        incapacidad_new.archivo = storage.filename
+                        incapacidad_new.url = storage.url
+                        incapacidad_new.save()
+                        # Salida en bitacora
+                        bitacora = Bitacora(
+                            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                            usuario=current_user,
+                            descripcion=safe_message(
+                                f"Editado Incapacidad {incapacidad_new.id}, se dio de baja {incapacidad.id}"
+                            ),
+                            url=url_for("incapacidades.detail", incapacidad_id=incapacidad_new.id),
+                        )
+                        bitacora.save()
+                        flash(bitacora.descripcion, "success")
+                        return redirect(bitacora.url)
+                    else:
+                        incapacidad_new.delete()
+                        incapacidad.recover()
+                        return redirect(url_for("incapacidades.detail", incapacidad_id=incapacidad.id))
+    # Cargar valores leídos
     form.persona.data = incapacidad.persona.nombre_completo
     form.fecha_inicio.data = incapacidad.fecha_inicio
     form.fecha_termino.data = incapacidad.fecha_termino

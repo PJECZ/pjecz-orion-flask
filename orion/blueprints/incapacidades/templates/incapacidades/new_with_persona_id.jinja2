@@ -2,16 +2,20 @@
 {% import 'macros/form.jinja2' as f with context %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Nuevo Incapacidad{% endblock %}
+{% block title %}Nueva Incapacidad{% endblock %}
+
+{% block custom_head %}
+    {{ f.drop_zone_css() }}
+{% endblock %}
 
 {% block topbar_actions %}
-    {{ topbar.page('Nuevo Incapacidad') }}
+    {{ topbar.page('Nueva Incapacidad') }}
 {% endblock %}
 
 {% block content %}
     {% call f.card() %}
         {% set form_kwargs = {'persona_id': persona.id} %}
-        {% call f.form_tag('incapacidades.new_with_persona_id', fid='incapacidad_form', **form_kwargs) %}
+        {% call f.form_tag_multipart('incapacidades.new_with_persona_id', fid='incapacidad_form', **form_kwargs) %}
             {% call f.form_group(form.persona, readonly=true) %}{% endcall %}
             {% call f.form_group(form.fecha_inicio) %}{% endcall %}
             {% call f.form_group(form.fecha_termino) %}{% endcall %}
@@ -19,12 +23,16 @@
             {% call f.form_group(form.clave_incapacidad) %}{% endcall %}
             {% call f.form_group(form.region) %}{% endcall %}
             {% call f.form_group(form.motivo) %}{% endcall %}
+            {% call f.drop_zone_wrapper() %}
+                {% call f.form_group(form.archivo, class="dropzone") %}{% endcall %}
+            {% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ f.drop_zone_js() }}
     <!-- Calcular días de diferencia entre fechas -->
     <script>
         function calcular_dias() {

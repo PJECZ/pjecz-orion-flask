@@ -6,6 +6,7 @@ import json
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import or_
+from werkzeug.datastructures import CombinedMultiDict
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_string, safe_message
@@ -19,9 +20,20 @@ from orion.blueprints.usuarios.decorators import permission_required
 from orion.blueprints.licencias.models import Licencia
 from orion.blueprints.licencias.forms import LicenciaForm, LicenciaWithPersonaForm
 
+from lib.exceptions import (
+    MyAnyError,
+    MyFilenameError,
+    MyMissingConfigurationError,
+    MyNotAllowedExtensionError,
+    MyUnknownExtensionError,
+)
+from lib.storage import GoogleCloudStorage
+
 MODULO = "LICENCIAS"
 
 licencias = Blueprint("licencias", __name__, template_folder="templates")
+
+SUBDIRECTORIO = "licencias"
 
 
 @licencias.before_request
@@ -127,38 +139,99 @@ def detail(licencia_id):
 @permission_required(MODULO, Permiso.CREAR)
 def new():
     """Nuevo Licencia"""
-    form = LicenciaForm()
+    form = LicenciaForm(CombinedMultiDict((request.files, request.form)))
     if form.validate_on_submit():
+        # Validaciones
+        es_valido = True
         if form.fecha_termino.data < form.fecha_inicio.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
-            return render_template("licencias/new.jinja2", form=form)
-        # Leer el historial de puestos para extraer el nombre del puesto en esa fecha.
-        historial_puesto = HistorialPuesto.query.filter_by(persona_id=form.persona.data).filter_by(estatus="A")
-        historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
-        historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
-        puesto_nombre = None
-        if historial_puesto:
-            puesto_nombre = historial_puesto.puesto_funcion.nombre
-        # Guardar la Licencia
-        licencia = Licencia(
-            persona_id=form.persona.data,
-            tipo=form.tipo.data,
-            fecha_inicio=form.fecha_inicio.data,
-            fecha_termino=form.fecha_termino.data,
-            con_goce=form.con_goce.data,
-            motivo=safe_string(form.motivo.data, save_enie=True),
-            puesto_nombre=puesto_nombre,
-        )
-        licencia.save()
-        bitacora = Bitacora(
-            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-            usuario=current_user,
-            descripcion=safe_message(f"Nuevo Licencia {licencia.persona.nombre_completo}"),
-            url=url_for("licencias.detail", licencia_id=licencia.id),
-        )
-        bitacora.save()
-        flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+            es_valido = False
+        if es_valido:
+            # Leer el historial de puestos para extraer el nombre del puesto en esa fecha.
+            historial_puesto = HistorialPuesto.query.filter_by(persona_id=form.persona.data).filter_by(estatus="A")
+            historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+            historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+            puesto_nombre = None
+            if historial_puesto:
+                puesto_nombre = historial_puesto.puesto_funcion.nombre
+            # Guardar datos sin archivo
+            if request.files["archivo"].filename == "":
+                # Guardar la Licencia
+                licencia = Licencia(
+                    persona_id=form.persona.data,
+                    tipo=form.tipo.data,
+                    fecha_inicio=form.fecha_inicio.data,
+                    fecha_termino=form.fecha_termino.data,
+                    con_goce=form.con_goce.data,
+                    motivo=safe_string(form.motivo.data, save_enie=True),
+                    puesto_nombre=puesto_nombre,
+                )
+                licencia.save()
+                bitacora = Bitacora(
+                    modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                    usuario=current_user,
+                    descripcion=safe_message(f"Nuevo Licencia {licencia.persona.nombre_completo}"),
+                    url=url_for("licencias.detail", licencia_id=licencia.id),
+                )
+                bitacora.save()
+                flash(bitacora.descripcion, "success")
+                return redirect(bitacora.url)
+            else:
+                # Guardar cambios con un archivo adjunto
+                # Validar archivo
+                archivo = request.files["archivo"]
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+                try:
+                    storage.set_content_type(archivo.filename)
+                except MyNotAllowedExtensionError:
+                    flash("Tipo de archivo no permitido.", "warning")
+                    es_valido = False
+                except MyUnknownExtensionError:
+                    flash("Tipo de archivo desconocido.", "warning")
+                    es_valido = False
+                if es_valido:
+                    # crear un nuevo registro
+                    licencia = Licencia(
+                        persona_id=form.persona.data,
+                        tipo=form.tipo.data,
+                        fecha_inicio=form.fecha_inicio.data,
+                        fecha_termino=form.fecha_termino.data,
+                        con_goce=form.con_goce.data,
+                        motivo=safe_string(form.motivo.data, save_enie=True),
+                        puesto_nombre=puesto_nombre,
+                    )
+                    licencia.save()
+                    # Subir a Google Cloud Storage
+                    es_exitoso = True
+                    try:
+                        storage.set_filename(hashed_id=licencia.encode_id(), description="LICENCIA")
+                        storage.upload(archivo.stream.read())
+                    except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
+                        flash("Error fatal al subir el archivo a GCS.", "warning")
+                        es_exitoso = False
+                    except MyMissingConfigurationError:
+                        flash("Error al subir el archivo porque falla la configuración de GCS.", "danger")
+                        es_exitoso = False
+                    except Exception:
+                        flash("Error desconocido al subir el archivo.", "danger")
+                        es_exitoso = False
+                    # Remplazar archivo
+                    if es_exitoso:
+                        licencia.archivo = storage.filename
+                        licencia.url = storage.url
+                        licencia.save()
+                        # Salida en bitacora
+                        bitacora = Bitacora(
+                            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                            usuario=current_user,
+                            descripcion=safe_message(f"Nueva Licencia {licencia.id}"),
+                            url=url_for("licencias.detail", licencia_id=licencia.id),
+                        )
+                        bitacora.save()
+                        flash(bitacora.descripcion, "success")
+                        return redirect(bitacora.url)
+                    else:
+                        return redirect(url_for("licencias.detail", licencia_id=licencia.id))
     return render_template("licencias/new.jinja2", form=form)
 
 
@@ -167,38 +240,100 @@ def new():
 def new_with_persona_id(persona_id):
     """Nueva Licencia con Persona"""
     persona = Persona.query.get_or_404(persona_id)
-    form = LicenciaWithPersonaForm()
+    form = LicenciaWithPersonaForm(CombinedMultiDict((request.files, request.form)))
     if form.validate_on_submit():
+        # Validaciones
+        es_valido = True
+        # Validar fecha
         if form.fecha_termino.data < form.fecha_inicio.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de termino.", "warning")
-            return render_template("licencias/new_with_persona_id.jinja2", form=form, persona=persona)
-        # Leer el historial de puestos para extraer el nombre del puesto en esa fecha.
-        historial_puesto = HistorialPuesto.query.filter_by(persona=persona).filter_by(estatus="A")
-        historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
-        historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
-        puesto_nombre = None
-        if historial_puesto:
-            puesto_nombre = historial_puesto.puesto_funcion.nombre
-        # Guardar la Licencia
-        licencia = Licencia(
-            persona=persona,
-            tipo=form.tipo.data,
-            fecha_inicio=form.fecha_inicio.data,
-            fecha_termino=form.fecha_termino.data,
-            con_goce=form.con_goce.data,
-            motivo=safe_string(form.motivo.data, save_enie=True),
-            puesto_nombre=puesto_nombre,
-        )
-        licencia.save()
-        bitacora = Bitacora(
-            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-            usuario=current_user,
-            descripcion=safe_message(f"Nueva Licencia {licencia.persona.nombre_completo}"),
-            url=url_for("licencias.detail", licencia_id=licencia.id),
-        )
-        bitacora.save()
-        flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+            es_valido = False
+        if es_valido:
+            # Leer el historial de puestos para extraer el nombre del puesto en esa fecha.
+            historial_puesto = HistorialPuesto.query.filter_by(persona=persona).filter_by(estatus="A")
+            historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+            historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+            puesto_nombre = None
+            if historial_puesto:
+                puesto_nombre = historial_puesto.puesto_funcion.nombre
+            # Guardar datos sin archivo
+            if request.files["archivo"].filename == "":
+                # Guardar la Licencia
+                licencia = Licencia(
+                    persona=persona,
+                    tipo=form.tipo.data,
+                    fecha_inicio=form.fecha_inicio.data,
+                    fecha_termino=form.fecha_termino.data,
+                    con_goce=form.con_goce.data,
+                    motivo=safe_string(form.motivo.data, save_enie=True),
+                    puesto_nombre=puesto_nombre,
+                )
+                licencia.save()
+                bitacora = Bitacora(
+                    modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                    usuario=current_user,
+                    descripcion=safe_message(f"Nueva Licencia {licencia.persona.nombre_completo}"),
+                    url=url_for("licencias.detail", licencia_id=licencia.id),
+                )
+                bitacora.save()
+                flash(bitacora.descripcion, "success")
+                return redirect(bitacora.url)
+            else:
+                # Guardar cambios con un archivo adjunto
+                # Validar archivo
+                archivo = request.files["archivo"]
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+                try:
+                    storage.set_content_type(archivo.filename)
+                except MyNotAllowedExtensionError:
+                    flash("Tipo de archivo no permitido.", "warning")
+                    es_valido = False
+                except MyUnknownExtensionError:
+                    flash("Tipo de archivo desconocido.", "warning")
+                    es_valido = False
+                if es_valido:
+                    # crear un nuevo registro
+                    licencia = Licencia(
+                        persona=persona,
+                        tipo=form.tipo.data,
+                        fecha_inicio=form.fecha_inicio.data,
+                        fecha_termino=form.fecha_termino.data,
+                        con_goce=form.con_goce.data,
+                        motivo=safe_string(form.motivo.data, save_enie=True),
+                        puesto_nombre=puesto_nombre,
+                    )
+                    licencia.save()
+                    # Subir a Google Cloud Storage
+                    es_exitoso = True
+                    try:
+                        storage.set_filename(hashed_id=licencia.encode_id(), description="LICENCIA")
+                        storage.upload(archivo.stream.read())
+                    except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
+                        flash("Error fatal al subir el archivo a GCS.", "warning")
+                        es_exitoso = False
+                    except MyMissingConfigurationError:
+                        flash("Error al subir el archivo porque falla la configuración de GCS.", "danger")
+                        es_exitoso = False
+                    except Exception:
+                        flash("Error desconocido al subir el archivo.", "danger")
+                        es_exitoso = False
+                    # Remplazar archivo
+                    if es_exitoso:
+                        licencia.archivo = storage.filename
+                        licencia.url = storage.url
+                        licencia.save()
+                        # Salida en bitacora
+                        bitacora = Bitacora(
+                            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                            usuario=current_user,
+                            descripcion=safe_message(f"Nueva Licencia {licencia.id}"),
+                            url=url_for("licencias.detail", licencia_id=licencia.id),
+                        )
+                        bitacora.save()
+                        flash(bitacora.descripcion, "success")
+                        return redirect(bitacora.url)
+                    else:
+                        return redirect(url_for("licencias.detail", licencia_id=licencia.id))
     form.persona.data = persona.nombre_completo
     return render_template("licencias/new_with_persona_id.jinja2", form=form, persona=persona)
 
@@ -208,33 +343,105 @@ def new_with_persona_id(persona_id):
 def edit(licencia_id):
     """Editar Licencia"""
     licencia = Licencia.query.get_or_404(licencia_id)
-    form = LicenciaWithPersonaForm()
+    form = LicenciaWithPersonaForm(CombinedMultiDict((request.files, request.form)))
     if form.validate_on_submit():
+        # Validaciones
+        es_valido = True
+        # Validar fecha
         if form.fecha_inicio.data > form.fecha_termino.data:
             flash("La fecha de inicio no puede ser mayor a la fecha de término", "warning")
-            return render_template("licencias/edit.jinja2", form=form, licencia=licencia)
-        # Guardar el historial de puesto.
-        historial_puesto = HistorialPuesto.query.filter_by(persona=licencia.persona).filter_by(estatus="A")
-        historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
-        historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
-        licencia.puesto_nombre = None
-        if historial_puesto:
-            licencia.puesto_nombre = historial_puesto.puesto_funcion.nombre
-        licencia.tipo = form.tipo.data
-        licencia.fecha_inicio = form.fecha_inicio.data
-        licencia.fecha_termino = form.fecha_termino.data
-        licencia.con_goce = form.con_goce.data
-        licencia.motivo = safe_string(form.motivo.data, save_enie=True)
-        licencia.save()
-        bitacora = Bitacora(
-            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-            usuario=current_user,
-            descripcion=safe_message(f"Editado Licencia {licencia.persona}"),
-            url=url_for("licencias.detail", licencia_id=licencia.id),
-        )
-        bitacora.save()
-        flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+            es_valido = False
+        if es_valido:
+            if request.files["archivo"].filename == "":
+                # Guardar cambios sin modificar el archivo
+                # Guardar el historial de puesto.
+                historial_puesto = HistorialPuesto.query.filter_by(persona=licencia.persona).filter_by(estatus="A")
+                historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+                historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+                licencia.puesto_nombre = None
+                if historial_puesto:
+                    licencia.puesto_nombre = historial_puesto.puesto_funcion.nombre
+                licencia.tipo = form.tipo.data
+                licencia.fecha_inicio = form.fecha_inicio.data
+                licencia.fecha_termino = form.fecha_termino.data
+                licencia.con_goce = form.con_goce.data
+                licencia.motivo = safe_string(form.motivo.data, save_enie=True)
+                licencia.save()
+                bitacora = Bitacora(
+                    modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                    usuario=current_user,
+                    descripcion=safe_message(f"Editado Licencia {licencia.persona}"),
+                    url=url_for("licencias.detail", licencia_id=licencia.id),
+                )
+                bitacora.save()
+                flash(bitacora.descripcion, "success")
+                return redirect(bitacora.url)
+            else:
+                # Guardar cambios modificando el archivo adjunto
+                # Validar archivo
+                archivo = request.files["archivo"]
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+                try:
+                    storage.set_content_type(archivo.filename)
+                except MyNotAllowedExtensionError:
+                    flash("Tipo de archivo no permitido.", "warning")
+                    es_valido = False
+                except MyUnknownExtensionError:
+                    flash("Tipo de archivo desconocido.", "warning")
+                    es_valido = False
+                if es_valido:
+                    # Eliminar y crear un nuevo registro para el remplazo
+                    licencia.delete()
+                    # Guardar el historial de puesto.
+                    historial_puesto = HistorialPuesto.query.filter_by(persona=licencia.persona).filter_by(estatus="A")
+                    historial_puesto = historial_puesto.filter(form.fecha_inicio.data >= HistorialPuesto.fecha_inicio)
+                    historial_puesto = historial_puesto.order_by(HistorialPuesto.fecha_inicio.desc()).first()
+                    licencia.puesto_nombre = None
+                    if historial_puesto:
+                        licencia.puesto_nombre = historial_puesto.puesto_funcion.nombre
+                    # Crear nuevo registro
+                    licencia_new = Licencia(
+                        persona=licencia.persona,
+                        tipo=form.tipo.data,
+                        fecha_inicio=form.fecha_inicio.data,
+                        fecha_termino=form.fecha_termino.data,
+                        con_goce=form.con_goce.data,
+                        motivo=safe_string(form.motivo.data, save_enie=True),
+                    )
+                    licencia_new.save()
+                    # Subir a Google Cloud Storage
+                    es_exitoso = True
+                    try:
+                        storage.set_filename(hashed_id=licencia_new.encode_id(), description="LICENCIA")
+                        storage.upload(archivo.stream.read())
+                    except (MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError):
+                        flash("Error fatal al subir el archivo a GCS.", "warning")
+                        es_exitoso = False
+                    except MyMissingConfigurationError:
+                        flash("Error al subir el archivo porque falla la configuración de GCS.", "danger")
+                        es_exitoso = False
+                    except Exception:
+                        flash("Error desconocido al subir el archivo.", "danger")
+                        es_exitoso = False
+                    # Remplazar archivo
+                    if es_exitoso:
+                        licencia_new.archivo = storage.filename
+                        licencia_new.url = storage.url
+                        licencia_new.save()
+                        # Salida en bitacora
+                        bitacora = Bitacora(
+                            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                            usuario=current_user,
+                            descripcion=safe_message(f"Editado Licencia {licencia_new.id}, se dio de baja {licencia.id}"),
+                            url=url_for("licencias.detail", licencia_id=licencia_new.id),
+                        )
+                        bitacora.save()
+                        flash(bitacora.descripcion, "success")
+                        return redirect(bitacora.url)
+                    else:
+                        licencia_new.delete()
+                        licencia.recover()
+                        return redirect(url_for("licencias.detail", licencia_id=licencia.id))
     form.persona.data = licencia.persona.nombre_completo
     form.tipo.data = licencia.tipo
     form.fecha_inicio.data = licencia.fecha_inicio
