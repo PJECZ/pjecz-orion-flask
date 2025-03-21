@@ -21,7 +21,7 @@
 
 {% block content %}
     {% call detail.card(estatus=persona_acta_administrativa.estatus) %}
-        {{ detail.label_value('Persona', persona_acta_administrativa.persona.nombre_completo, url_for('personas.detail', persona_id=persona_acta_administrativa.persona_id)) }}
+        {{ detail.label_value('Persona', persona_acta_administrativa.persona.nombre_completo, url_for('personas.detail_section', persona_id=persona_acta_administrativa.persona_id, seccion='actas_administrativas')) }}
         {{ detail.label_value('Fecha', persona_acta_administrativa.fecha) }}
         {{ detail.label_value('Falta', persona_acta_administrativa.falta) }}
         {{ detail.label_value('Sanción', persona_acta_administrativa.sancion) }}

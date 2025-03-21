@@ -20,7 +20,7 @@
 
 {% block content %}
     {% call detail.card(estatus=historial_academico.estatus) %}
-        {{ detail.label_value('Persona', historial_academico.persona.nombre_completo, url_for('personas.detail', persona_id=historial_academico.persona_id)) }}
+        {{ detail.label_value('Persona', historial_academico.persona.nombre_completo, url_for('personas.detail_section', persona_id=historial_academico.persona_id, seccion='historial_academico')) }}
         {{ detail.label_value('Nivel de Estudios', historial_academico.nivel_academico.clave_nombre) }}
         {{ detail.label_value('Escuela', historial_academico.nombre_escuela) }}
         {{ detail.label_value('Ciudad', historial_academico.nombre_ciudad) }}

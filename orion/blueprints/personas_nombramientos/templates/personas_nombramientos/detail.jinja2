@@ -20,7 +20,7 @@
 
 {% block content %}
     {% call detail.card(estatus=persona_nombramiento.estatus) %}
-        {{ detail.label_value('Persona', persona_nombramiento.persona.nombre_completo, url_for('personas.detail', persona_id=persona_nombramiento.persona.id)) }}
+        {{ detail.label_value('Persona', persona_nombramiento.persona.nombre_completo, url_for('personas.detail_section', persona_id=persona_nombramiento.persona.id, seccion='personas_nombramientos')) }}
         {{ detail.label_value('Cargo', persona_nombramiento.cargo) }}
         {{ detail.label_value('Centro de Trabajo', persona_nombramiento.centro_trabajo) }}
         {{ detail.label_value('Tipo de Nombramiento', persona_nombramiento.tipo) }}
