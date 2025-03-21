@@ -20,7 +20,7 @@
 
 {% block content %}
     {% call detail.card(estatus=historial_puesto.estatus) %}
-        {{ detail.label_value('Persona', historial_puesto.persona.nombre_completo) }}
+        {{ detail.label_value('Persona', historial_puesto.persona.nombre_completo, url_for('personas.detail_section', persona_id=historial_puesto.persona.id, seccion='historial_puestos')) }}
         {{ detail.label_value('Puesto', historial_puesto.puesto_funcion.puesto.clave + ': ' + historial_puesto.puesto_funcion.puesto.nombre) }}
         {{ detail.label_value('Función', historial_puesto.puesto_funcion.nombre, url_for("puestos_funciones.detail", puesto_funcion_id=historial_puesto.puesto_funcion.id)) }}
         {{ detail.label_value('Fecha de Inicio', historial_puesto.fecha_inicio) }}

@@ -20,7 +20,7 @@
 
 {% block content %}
     {% call detail.card(estatus=persona_acta_protesta.estatus) %}
-        {{ detail.label_value('Persona', persona_acta_protesta.persona.nombre_completo, url_for('personas.detail', persona_id=persona_acta_protesta.persona_id)) }}
+        {{ detail.label_value('Persona', persona_acta_protesta.persona.nombre_completo, url_for('personas.detail_section', persona_id=persona_acta_protesta.persona_id, seccion='actas_protestas')) }}
         {{ detail.label_value('Fecha', persona_acta_protesta.fecha) }}
         {{ detail.label_value('Cargo', persona_acta_protesta.cargo) }}
     {% endcall %}
