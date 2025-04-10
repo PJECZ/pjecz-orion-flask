@@ -55,7 +55,7 @@
                 <div class="img-fluid img-det">
                     {% if fotografia %}
                         <a href="{{url_for('personas_fotografias.detail', persona_fotografia_id=fotografia.id)}}">
-                            <img src='{{fotografia.url}}' width="255px">
+                            <img src="{{ url_for('personas_fotografias.view_file_img', persona_fotografia_id=fotografia.id) }}" width="255px">
                         </a>
                     {% else %}
                         <a href="{{url_for('personas_fotografias.new_with_persona_id', persona_id=persona.id)}}">

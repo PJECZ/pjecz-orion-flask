@@ -3,12 +3,15 @@ Persona Actas Administrativas, vistas
 """
 
 import json
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, make_response, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import or_
 from werkzeug.datastructures import CombinedMultiDict
+from werkzeug.exceptions import NotFound
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
+from lib.exceptions import MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError, MyUploadError
+from lib.google_cloud_storage import get_blob_name_from_url, get_file_from_gcs, upload_file_to_gcs
 from lib.safe_string import safe_string, safe_message
 
 from orion.blueprints.bitacoras.models import Bitacora
@@ -164,7 +167,7 @@ def new_with_persona_id(persona_id):
             es_valido = True
             # Validar archivo
             archivo = request.files["archivo"]
-            storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+            storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf"])
             try:
                 storage.set_content_type(archivo.filename)
             except MyNotAllowedExtensionError:
@@ -257,7 +260,7 @@ def edit(persona_acta_administrativa_id):
             es_valido = True
             # Validar archivo
             archivo = request.files["archivo"]
-            storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg", "png"])
+            storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf"])
             try:
                 storage.set_content_type(archivo.filename)
             except MyNotAllowedExtensionError:
@@ -369,3 +372,62 @@ def recover(persona_acta_administrativa_id):
     return redirect(
         url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id)
     )
+
+
+@personas_actas_administrativas.route("/personas_actas_administrativas/<int:persona_acta_administrativa_id>/pdf")
+def download_pdf(persona_acta_administrativa_id):
+    """Descargar el archivo PDF de un Archivo"""
+
+    # Consultar
+    persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
+
+    # Si el estatus es B, no se puede descargar
+    if persona_acta_administrativa.estatus == "B":
+        flash("No se puede descargar un archivo inactivo", "warning")
+        return redirect(
+            url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id)
+        )
+
+    # Tomar el nombre del archivo con el que sera descargado
+    descarga_nombre = persona_acta_administrativa.archivo
+
+    # Obtener el contenido del archivo desde Google Storage
+    try:
+        descarga_contenido = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(persona_acta_administrativa.url),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+        flash(str(error), "danger")
+        return redirect(
+            url_for("personas_actas_administrativas.detail", persona_acta_administrativa_id=persona_acta_administrativa.id)
+        )
+
+    # Descargar un archivo PDF
+    response = make_response(descarga_contenido)
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = f"attachment; filename={descarga_nombre}"
+    return response
+
+
+@personas_actas_administrativas.route("/personas_actas_administrativas/ver_archivo_pdf/<int:persona_acta_administrativa_id>")
+def view_file_pdf(persona_acta_administrativa_id):
+    """Ver archivo PDF de PersonaActaAdministrativa para insertarlo en un iframe en el detalle"""
+
+    # Consultar
+    persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
+
+    # Obtener el contenido del archivo
+    try:
+        archivo = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(persona_acta_administrativa.url),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+        print(persona_acta_administrativa.url)
+        raise NotFound("No se encontró el archivo.")
+
+    # Entregar el archivo
+    response = make_response(archivo)
+    response.headers["Content-Type"] = "application/pdf"
+    return response

@@ -24,7 +24,7 @@
         {% endcall %}
     {% endcall %}
     {% if fotografia.archivo %}
-        <a href="{{ fotografia.url }}"><img src="{{ fotografia.url }}" style="max-width: 255px; height: auto;"/></a>
+        <a href="{{ url_for('personas_fotografias.view_file_img', persona_fotografia_id=fotografia.id) }}"><img src="{{ url_for('personas_fotografias.view_file_img', persona_fotografia_id=fotografia.id) }}" style="max-width: 255px; height: auto;"/></a>
     {% endif %}
 {% endblock %}
 

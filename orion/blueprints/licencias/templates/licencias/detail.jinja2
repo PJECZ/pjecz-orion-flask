@@ -31,15 +31,15 @@
         {{ detail.label_value('Días', (licencia.fecha_termino - licencia.fecha_inicio).days + 1) }}
         {{ detail.label_value('Motivo', licencia.motivo) }}
         {{ detail.label_value('Puesto', licencia.puesto_nombre) }}
+        {{ detail.label_value('URL', licencia.url, url_for('licencias.download_pdf', licencia_id=licencia.id)) }}
     {% endcall %}
     {% if licencia.archivo %}
         {% call detail.card('Vista previa del archivo') %}
             <!-- Preview del archivo -->
-            {% if licencia.type_format(licencia.archivo) == "IMG" %}
-                <a href="{{ licencia.url }}"><img src="{{ licencia.url }}" style="max-width: 500px; height: auto;"/></a>
-            {% endif %}
             {% if licencia.type_format(licencia.archivo) == "PDF" %}
-                <object data="{{ licencia.url }}" type="application/pdf" width="100%" height="600"></object>
+                <object data="{{ url_for('licencias.view_file_pdf', licencia_id=licencia.id) }}" type="application/pdf" width="100%" height="600px">
+                    <p class="mb-0">El navegador no puede mostrar el archivo PDF o no existe en el depósito.</p>
+                </object>
             {% endif %}
         {% endcall %}
     {% endif %}

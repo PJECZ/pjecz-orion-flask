@@ -64,7 +64,7 @@ class PersonaAdjunto(database.Model, UniversalMixin):
 
     def set_extension(self, archivo_nombre):
         """Establece el tipo de extensión del archivo"""
-        extensiones_permitidas = PersonaNombramiento.EXTENSIONES.keys()
+        extensiones_permitidas = PersonaAdjunto.EXTENSIONES.keys()
         if "." in archivo_nombre and archivo_nombre.rsplit(".", 1)[1] in extensiones_permitidas:
             self.extension = archivo_nombre.rsplit(".", 1)[1]
             return True

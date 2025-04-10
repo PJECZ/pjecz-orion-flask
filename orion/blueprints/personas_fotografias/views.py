@@ -3,11 +3,14 @@ Personas Fotografías, vistas
 """
 
 import json
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, make_response, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from werkzeug.datastructures import CombinedMultiDict
+from werkzeug.exceptions import NotFound
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
+from lib.exceptions import MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError, MyUploadError
+from lib.google_cloud_storage import get_blob_name_from_url, get_file_from_gcs, upload_file_to_gcs
 from lib.safe_string import safe_string, safe_message
 
 from orion.blueprints.bitacoras.models import Bitacora
@@ -208,3 +211,58 @@ def recover(persona_fotografia_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("personas_fotografias.detail", persona_fotografia_id=fotografia.id))
+
+
+@personas_fotografias.route("/personas_fotografias/<int:persona_fotografia_id>/img")
+def download_img(persona_fotografia_id):
+    """Descargar el archivo PDF de un Archivo"""
+
+    # Consultar
+    fotografia = PersonaFotografia.query.get_or_404(persona_fotografia_id)
+
+    # Si el estatus es B, no se puede descargar
+    if fotografia.estatus == "B":
+        flash("No se puede descargar un archivo inactivo", "warning")
+        return redirect(url_for("personas_fotografias.detail", persona_fotografia_id=fotografia.id))
+
+    # Tomar el nombre del archivo con el que sera descargado
+    descarga_nombre = fotografia.archivo
+
+    # Obtener el contenido del archivo desde Google Storage
+    try:
+        descarga_contenido = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(fotografia.url),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+        flash(str(error), "danger")
+        return redirect(url_for("personas_fotografias.detail", persona_fotografia_id=fotografia.id))
+
+    # Descargar un archivo PDF
+    response = make_response(descarga_contenido)
+    response.headers["Content-Type"] = "image/jpg"
+    response.headers["Content-Disposition"] = f"attachment; filename={descarga_nombre}"
+    return response
+
+
+@personas_fotografias.route("/personas_fotografias/ver_archivo_img/<int:persona_fotografia_id>")
+def view_file_img(persona_fotografia_id):
+    """Ver archivo IMG de PersonaFotografia para insertarlo en un iframe en el detalle"""
+
+    # Consultar
+    fotografia = PersonaFotografia.query.get_or_404(persona_fotografia_id)
+
+    # Obtener el contenido del archivo
+    try:
+        archivo = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(fotografia.url),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+        print(fotografia.url)
+        raise NotFound("No se encontró el archivo.")
+
+    # Entregar el archivo
+    response = make_response(archivo)
+    response.headers["Content-Type"] = "image/jpg"
+    return response
