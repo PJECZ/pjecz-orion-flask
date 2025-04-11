@@ -31,15 +31,15 @@
         {{ detail.label_value('Region', incapacidad.region) }}
         {{ detail.label_value('Motivo', incapacidad.motivo) }}
         {{ detail.label_value('Puesto', incapacidad.puesto_nombre) }}
+        {{ detail.label_value('URL', incapacidad.url, url_for('incapacidades.download_pdf', incapacidad_id=incapacidad.id)) }}
     {% endcall %}
     {% if incapacidad.archivo %}
         {% call detail.card('Vista previa del archivo') %}
             <!-- Preview del archivo -->
-            {% if incapacidad.type_format(incapacidad.archivo) == "IMG" %}
-                <a href="{{ incapacidad.url }}"><img src="{{ incapacidad.url }}" style="max-width: 500px; height: auto;"/></a>
-            {% endif %}
             {% if incapacidad.type_format(incapacidad.archivo) == "PDF" %}
-                <object data="{{ incapacidad.url }}" type="application/pdf" width="100%" height="600"></object>
+                <object data="{{ url_for('incapacidades.view_file_pdf', incapacidad_id=incapacidad.id) }}" type="application/pdf" width="100%" height="600px">
+                    <p class="mb-0">El navegador no puede mostrar el archivo PDF o no existe en el depósito.</p>
+                </object>
             {% endif %}
         {% endcall %}
     {% endif %}

@@ -22,10 +22,10 @@
     {% call detail.card(estatus=fotografia.estatus) %}
         {{ detail.label_value_big('Persona', fotografia.persona.nombre_completo) }}
         {{ detail.label_value('Archivo', fotografia.archivo) }}
-        {{ detail.label_value('URL', fotografia.url, fotografia.url) }}
+        {{ detail.label_value('URL', fotografia.url, url_for('personas_fotografias.download_img', persona_fotografia_id=fotografia.id)) }}
     {% endcall %}
     {% call detail.card('Vista previa de la fotografía') %}
-        <a href="{{ fotografia.url }}"><img src="{{ fotografia.url }}" style="max-width: 255px; height: auto;"/></a>
+        <a href="{{ url_for('personas_fotografias.view_file_img', persona_fotografia_id=fotografia.id) }}"><img src="{{ url_for('personas_fotografias.view_file_img', persona_fotografia_id=fotografia.id) }}" style="max-width: 255px; height: auto;"/></a>
     {% endcall %}
 {% endblock %}
 
