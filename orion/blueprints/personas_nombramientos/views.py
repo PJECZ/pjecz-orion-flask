@@ -129,7 +129,7 @@ def new_with_persona_id(persona_id):
                 # Guardar cambios con un archivo adjunto
                 # Validar archivo
                 archivo = request.files["archivo"]
-                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf"])
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg"])
                 try:
                     storage.set_content_type(archivo.filename)
                 except MyNotAllowedExtensionError:
@@ -221,7 +221,7 @@ def edit(persona_nombramiento_id):
                 # Guardar cambios modificando el archivo adjunto
                 # Validar archivo
                 archivo = request.files["archivo"]
-                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf"])
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg"])
                 try:
                     storage.set_content_type(archivo.filename)
                 except MyNotAllowedExtensionError:
@@ -374,4 +374,27 @@ def view_file_pdf(persona_nombramiento_id):
     # Entregar el archivo
     response = make_response(archivo)
     response.headers["Content-Type"] = "application/pdf"
+    return response
+
+
+@personas_nombramientos.route("/personas_nombramientos/ver_archivo_img/<int:persona_nombramiento_id>")
+def view_file_img(persona_nombramiento_id):
+    """Ver archivo IMG de adjunto para insertarlo en un iframe en el detalle"""
+
+    # Consultar
+    nombramiento = PersonaNombramiento.query.get_or_404(persona_nombramiento_id)
+
+    # Obtener el contenido del archivo
+    try:
+        archivo = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(nombramiento.url),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+        print(nombramiento.url)
+        raise NotFound("No se encontró el archivo.")
+
+    # Entregar el archivo
+    response = make_response(archivo)
+    response.headers["Content-Type"] = "image/jpeg"
     return response

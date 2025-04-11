@@ -183,7 +183,7 @@ def new():
                 # Guardar cambios con un archivo adjunto
                 # Validar archivo
                 archivo = request.files["archivo"]
-                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf"])
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg"])
                 try:
                     storage.set_content_type(archivo.filename)
                 except MyNotAllowedExtensionError:
@@ -285,7 +285,7 @@ def new_with_persona_id(persona_id):
                 # Guardar cambios con un archivo adjunto
                 # Validar archivo
                 archivo = request.files["archivo"]
-                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf"])
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg"])
                 try:
                     storage.set_content_type(archivo.filename)
                 except MyNotAllowedExtensionError:
@@ -527,19 +527,42 @@ def view_file_pdf(licencia_id):
     """Ver archivo PDF de Incapacidad para insertarlo en un iframe en el detalle"""
 
     # Consultar
-    adjunto = Licencia.query.get_or_404(licencia_id)
+    licencia = Licencia.query.get_or_404(licencia_id)
 
     # Obtener el contenido del archivo
     try:
         archivo = get_file_from_gcs(
             bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
-            blob_name=get_blob_name_from_url(adjunto.url),
+            blob_name=get_blob_name_from_url(licencia.url),
         )
     except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
-        print(adjunto.url)
+        print(licencia.url)
         raise NotFound("No se encontró el archivo.")
 
     # Entregar el archivo
     response = make_response(archivo)
     response.headers["Content-Type"] = "application/pdf"
+    return response
+
+
+@licencias.route("/licencias/ver_archivo_img/<int:licencia_id>")
+def view_file_img(licencia_id):
+    """Ver archivo IMG de adjunto para insertarlo en un iframe en el detalle"""
+
+    # Consultar
+    licencia = Licencia.query.get_or_404(licencia_id)
+
+    # Obtener el contenido del archivo
+    try:
+        archivo = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(licencia.url),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+        print(licencia.url)
+        raise NotFound("No se encontró el archivo.")
+
+    # Entregar el archivo
+    response = make_response(archivo)
+    response.headers["Content-Type"] = "image/jpeg"
     return response
