@@ -167,7 +167,7 @@ def new_with_persona_id(persona_id):
             es_valido = True
             # Validar archivo
             archivo = request.files["archivo"]
-            storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf"])
+            storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg"])
             try:
                 storage.set_content_type(archivo.filename)
             except MyNotAllowedExtensionError:
@@ -260,7 +260,7 @@ def edit(persona_acta_administrativa_id):
             es_valido = True
             # Validar archivo
             archivo = request.files["archivo"]
-            storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf"])
+            storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg"])
             try:
                 storage.set_content_type(archivo.filename)
             except MyNotAllowedExtensionError:
@@ -430,4 +430,27 @@ def view_file_pdf(persona_acta_administrativa_id):
     # Entregar el archivo
     response = make_response(archivo)
     response.headers["Content-Type"] = "application/pdf"
+    return response
+
+
+@personas_actas_administrativas.route("/personas_actas_administrativas/ver_archivo_img/<int:persona_acta_administrativa_id>")
+def view_file_img(persona_acta_administrativa_id):
+    """Ver archivo IMG de adjunto para insertarlo en un iframe en el detalle"""
+
+    # Consultar
+    persona_acta_administrativa = PersonaActaAdministrativa.query.get_or_404(persona_acta_administrativa_id)
+
+    # Obtener el contenido del archivo
+    try:
+        archivo = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(persona_acta_administrativa.url),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+        print(persona_acta_administrativa.url)
+        raise NotFound("No se encontró el archivo.")
+
+    # Entregar el archivo
+    response = make_response(archivo)
+    response.headers["Content-Type"] = "image/jpeg"
     return response

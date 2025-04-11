@@ -23,12 +23,18 @@
         {{ detail.label_value('Persona', persona_acta_protesta.persona.nombre_completo, url_for('personas.detail_section', persona_id=persona_acta_protesta.persona_id, seccion='actas_protestas')) }}
         {{ detail.label_value('Fecha', persona_acta_protesta.fecha) }}
         {{ detail.label_value('Cargo', persona_acta_protesta.cargo) }}
-        {{ detail.label_value('URL', persona_acta_protesta.url, url_for('personas_actas_protestas.download_pdf', persona_acta_protesta_id=persona_acta_protesta.id)) }}
+        {% if persona_acta_protesta.type_format(persona_acta_protesta.archivo) == "IMG" %}
+            {{ detail.label_value('URL', persona_acta_protesta.url, url_for('personas_actas_protestas.view_file_img', persona_acta_protesta_id=persona_acta_protesta.id)) }}
+        {% elif persona_acta_protesta.type_format(persona_acta_protesta.archivo) == "PDF" %}
+            {{ detail.label_value('URL', persona_acta_protesta.url, url_for('personas_actas_protestas.download_pdf', persona_acta_protesta_id=persona_acta_protesta.id)) }}
+        {% endif %}
     {% endcall %}
     {% if persona_acta_protesta.archivo %}
         {% call detail.card('Vista previa del archivo') %}
             <!-- Preview del archivo -->
-            {% if persona_acta_protesta.type_format(persona_acta_protesta.archivo) == "PDF" %}
+            {% if persona_acta_protesta.type_format(persona_acta_protesta.archivo) == "IMG" %}
+                <img src="{{ url_for('personas_actas_protestas.view_file_img', persona_acta_protesta_id=persona_acta_protesta.id) }}">
+            {% elif persona_acta_protesta.type_format(persona_acta_protesta.archivo) == "PDF" %}
                 <object data="{{ url_for('personas_actas_protestas.view_file_pdf', persona_acta_protesta_id=persona_acta_protesta.id) }}" type="application/pdf" width="100%" height="600px">
                     <p class="mb-0">El navegador no puede mostrar el archivo PDF o no existe en el depósito.</p>
                 </object>

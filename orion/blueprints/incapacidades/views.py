@@ -304,7 +304,7 @@ def new_with_persona_id(persona_id):
                 # Guardar cambios con un archivo adjunto
                 # Validar archivo
                 archivo = request.files["archivo"]
-                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf"])
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg"])
                 try:
                     storage.set_content_type(archivo.filename)
                 except MyNotAllowedExtensionError:
@@ -416,7 +416,7 @@ def edit(incapacidad_id):
                 # Guardar cambios modificando el archivo adjunto
                 # Validar archivo
                 archivo = request.files["archivo"]
-                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf"])
+                storage = GoogleCloudStorage(base_directory=SUBDIRECTORIO, allowed_extensions=["pdf", "jpg", "jpeg"])
                 try:
                     storage.set_content_type(archivo.filename)
                 except MyNotAllowedExtensionError:
@@ -572,4 +572,27 @@ def view_file_pdf(incapacidad_id):
     # Entregar el archivo
     response = make_response(archivo)
     response.headers["Content-Type"] = "application/pdf"
+    return response
+
+
+@incapacidades.route("/incapacidades/ver_archivo_img/<int:incapacidad_id>")
+def view_file_img(incapacidad_id):
+    """Ver archivo IMG de adjunto para insertarlo en un iframe en el detalle"""
+
+    # Consultar
+    incapacidad = Incapacidad.query.get_or_404(incapacidad_id)
+
+    # Obtener el contenido del archivo
+    try:
+        archivo = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(incapacidad.url),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+        print(incapacidad.url)
+        raise NotFound("No se encontró el archivo.")
+
+    # Entregar el archivo
+    response = make_response(archivo)
+    response.headers["Content-Type"] = "image/jpeg"
     return response
