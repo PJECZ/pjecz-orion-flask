@@ -24,6 +24,7 @@ class PersonaAdjunto(database.Model, UniversalMixin):
         "CREDENCIAL_PJ": "Credencial del Poder Judicial",
         "CURP": "CURP",
         "NOMBRAMIENTO": "Nombramiento",
+        "EXPEDIENTE PERSONAL 2025": "Expediente Personal - 2025",
         "TITUTLO": "Título",
         "OTRO": "Otro",
     }
