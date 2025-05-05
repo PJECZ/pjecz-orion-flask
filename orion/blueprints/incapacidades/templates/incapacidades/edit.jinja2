@@ -34,7 +34,7 @@
     {% if incapacidad.archivo %}
         {% call detail.card("Vista previa del archivo") %}
             {% if incapacidad.type_format(incapacidad.archivo) == "IMG" %}
-                <img src="{{ url_for('incapacidades.view_file_img', incapacidad_id=incapacidad.id) }}">
+                <img src="{{ url_for('incapacidades.view_file_img', incapacidad_id=incapacidad.id) }}" width="100%" height="600px">
             {% elif incapacidad.type_format(incapacidad.archivo) == "PDF" %}
                 <object data="{{ url_for('incapacidades.view_file_pdf', incapacidad_id=incapacidad.id) }}" type="application/pdf" width="100%" height="600px">
                     <p class="mb-0">El navegador no puede mostrar el archivo PDF o no existe en el depósito.</p>

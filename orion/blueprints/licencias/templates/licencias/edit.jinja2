@@ -33,7 +33,7 @@
     {# Vista previa del archivo  #}
     {% call detail.card("Vista previa del archivo") %}
         {% if licencia.type_format(licencia.archivo) == "IMG" %}
-            <img src="{{ url_for('licencias.view_file_img', licencia_id=licencia.id) }}">
+            <img src="{{ url_for('licencias.view_file_img', licencia_id=licencia.id) }}" width="100%" height="600px">
         {% elif licencia.type_format(licencia.archivo) == "PDF" %}
             <object data="{{ url_for('licencias.view_file_pdf', licencia_id=licencia.id) }}" type="application/pdf" width="100%" height="600px">
                 <p class="mb-0">El navegador no puede mostrar el archivo PDF o no existe en el depósito.</p>
