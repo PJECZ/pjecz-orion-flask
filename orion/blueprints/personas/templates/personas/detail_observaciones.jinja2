@@ -8,8 +8,10 @@
             {{ detail.label_value('Observaciones', persona.observaciones) }}
             <hr/>
             {{ detail.label_value('Observaciones Especiales', persona.observaciones_especiales) }}
-            <hr />
-            <a href="{{url_for('personas.edit_observaciones', persona_id=persona.id)}}" class="btn btn-warning">Editar</a>
+            {% if current_user.can_edit('PERSONAS') %}
+                <hr />
+                <a href="{{url_for('personas.edit_observaciones', persona_id=persona.id)}}" class="btn btn-warning">Editar</a>
+            {% endif %}
         {% endcall %}
     {# {% endif %} #}
 {% endblock %}

@@ -88,19 +88,19 @@
     {% endcall %}
     <!-- Menú de secciones -->
     <div class="btn-group btn-group-sm mb-1" role="group">
-        <a id="btn_datos_personales" href="{{url_for('personas.detail_section', seccion='datos_personales', persona_id=persona.id)}}" class="btn btn-outline-primary">Datos Personales</a>
-        <a id="btn_archivos_adjuntos" href="{{url_for('personas.detail_section', seccion='personas_adjuntos', persona_id=persona.id)}}" class="btn btn-outline-primary">Archivos Adjuntos</a>
-        <a id="btn_domicilios" href="{{url_for('personas.detail_section', seccion='domicilios', persona_id=persona.id)}}" class="btn btn-outline-primary">Domicilios</a>
-        <a id="btn_historial_academico" href="{{url_for('personas.detail_section', seccion='historial_academico', persona_id=persona.id)}}" class="btn btn-outline-primary">Historial Académico</a>
-        <a id="btn_historial_puestos" href="{{url_for('personas.detail_section', seccion='historial_puestos', persona_id=persona.id)}}" class="btn btn-outline-primary">Historial de Puestos</a>
-        <a id="btn_incapacidades" href="{{url_for('personas.detail_section', seccion='incapacidades', persona_id=persona.id)}}" class="btn btn-outline-primary">Incapacidades</a>
+        {% if current_user.can_edit('PERSONAS') %}<a id="btn_datos_personales" href="{{url_for('personas.detail_section', seccion='datos_personales', persona_id=persona.id)}}" class="btn btn-outline-primary">Datos Personales</a>{% endif %}
+        {% if current_user.can_view('PERSONAS ADJUNTOS') %}<a id="btn_archivos_adjuntos" href="{{url_for('personas.detail_section', seccion='personas_adjuntos', persona_id=persona.id)}}" class="btn btn-outline-primary">Archivos Adjuntos</a>{% endif %}
+        {% if current_user.can_view('DOMICILIOS') %}<a id="btn_domicilios" href="{{url_for('personas.detail_section', seccion='domicilios', persona_id=persona.id)}}" class="btn btn-outline-primary">Domicilios</a>{% endif %}
+        {% if current_user.can_view('HISTORIAL ACADEMICOS') %}<a id="btn_historial_academico" href="{{url_for('personas.detail_section', seccion='historial_academico', persona_id=persona.id)}}" class="btn btn-outline-primary">Historial Académico</a>{% endif %}
+        {% if current_user.can_view('HISTORIAL PUESTOS') %}<a id="btn_historial_puestos" href="{{url_for('personas.detail_section', seccion='historial_puestos', persona_id=persona.id)}}" class="btn btn-outline-primary">Historial de Puestos</a>{% endif %}
+        {% if current_user.can_view('INCAPACIDADES') %}<a id="btn_incapacidades" href="{{url_for('personas.detail_section', seccion='incapacidades', persona_id=persona.id)}}" class="btn btn-outline-primary">Incapacidades</a>{% endif %}
     </div>
     <div class="btn-group btn-group-sm mb-3" role="group" aria-label="Second group">
-        <a id="btn_licencias" href="{{url_for('personas.detail_section', seccion='licencias', persona_id=persona.id)}}" class="btn btn-outline-primary">Licencias</a>
-        <a id="btn_nombramientos" href="{{url_for('personas.detail_section', seccion='personas_nombramientos', persona_id=persona.id)}}" class="btn btn-outline-primary">Nombramientos</a>
-        <a id="btn_actas_administrativas" href="{{url_for('personas.detail_section', seccion='actas_administrativas', persona_id=persona.id)}}" class="btn btn-outline-primary">Actas Administrativas</a>
-        <a id="btn_actas_protestas" href="{{url_for('personas.detail_section', seccion='actas_protestas', persona_id=persona.id)}}" class="btn btn-outline-primary">Actas de Protestas</a>
-        <a id="btn_observaciones" href="{{url_for('personas.detail_section', seccion='observaciones', persona_id=persona.id)}}" class="btn btn-outline-primary">Observaciones</a>
+        {% if current_user.can_view('LICENCIAS') %}<a id="btn_licencias" href="{{url_for('personas.detail_section', seccion='licencias', persona_id=persona.id)}}" class="btn btn-outline-primary">Licencias</a>{% endif %}
+        {% if current_user.can_view('PERSONAS NOMBRAMIENTOS') %}<a id="btn_nombramientos" href="{{url_for('personas.detail_section', seccion='personas_nombramientos', persona_id=persona.id)}}" class="btn btn-outline-primary">Nombramientos</a>{% endif %}
+        {% if current_user.can_view('PERSONAS ACTAS ADMINISTRATIVAS') %}<a id="btn_actas_administrativas" href="{{url_for('personas.detail_section', seccion='actas_administrativas', persona_id=persona.id)}}" class="btn btn-outline-primary">Actas Administrativas</a>{% endif %}
+        {% if current_user.can_view('PERSONAS ACTAS PROTESTAS') %}<a id="btn_actas_protestas" href="{{url_for('personas.detail_section', seccion='actas_protestas', persona_id=persona.id)}}" class="btn btn-outline-primary">Actas de Protestas</a>{% endif %}
+        {% if current_user.can_edit('PERSONAS') %}<a id="btn_observaciones" href="{{url_for('personas.detail_section', seccion='observaciones', persona_id=persona.id)}}" class="btn btn-outline-primary">Observaciones</a>{% endif %}
     </div>
 {% endblock %}
 
