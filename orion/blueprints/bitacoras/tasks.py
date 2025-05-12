@@ -72,7 +72,7 @@ def enviar_reporte_diario(modulo_nombre: str, to_email: str) -> str:
     )
 
     # Elaborar el asunto del mensaje
-    asunto_str = f"PJECZ Plataforma Web: Bitácora diaria de {modulo_nombre}"
+    asunto_str = f"PJECZ Plataforma Orión: Bitácora diaria de {modulo_nombre}"
 
     # Elaborar el contenido del mensaje
     fecha_elaboracion = datetime.now(tz=pytz.timezone(TIMEZONE)).strftime("%d/%b/%Y %H:%M")
