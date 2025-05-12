@@ -106,9 +106,7 @@ def new_with_persona_id(persona_id):
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(
-                    f"Nuevo Archivo Adjunto {adjunto.persona.nombre_completo} - {adjunto.persona.nombre_completo}"
-                ),
+                descripcion=safe_message(f"Nuevo Archivo Adjunto {adjunto.persona.nombre_completo}"),
                 url=url_for("personas_adjuntos.detail", persona_adjunto_id=adjunto.id),
             )
             bitacora.save()
