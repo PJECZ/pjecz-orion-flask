@@ -28,9 +28,9 @@
     {% endcall %}
     {% call detail.card("Vista previa del archivo") %}
         {% if persona_adjunto.type_format(persona_adjunto.archivo) == "IMG" %}
-            <img src="{{ url_for('personas_adjuntos.view_file_img', persona_adjunto_id=persona_adjunto.id) }}" width="100%" height="600px">
+            <img src="{{ url_for('personas_adjuntos.view_file_img', persona_adjunto_id=persona_adjunto.id) }}" width="100%" height="auto">
         {% elif persona_adjunto.type_format(persona_adjunto.archivo) == "PDF" %}
-            <object data="{{ url_for('personas_adjuntos.view_file_pdf', persona_adjunto_id=persona_adjunto.id) }}" type="application/pdf" width="100%" height="600px">
+            <object data="{{ url_for('personas_adjuntos.view_file_pdf', persona_adjunto_id=persona_adjunto.id) }}" type="application/pdf" width="100%" height="auto">
                 <p class="mb-0">El navegador no puede mostrar el archivo PDF o no existe en el depósito.</p>
             </object>
         {% endif %}
