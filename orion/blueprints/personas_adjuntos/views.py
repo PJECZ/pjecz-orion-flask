@@ -106,7 +106,7 @@ def new_with_persona_id(persona_id):
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Nuevo Archivo Adjunto {adjunto.persona.nombre_completo}"),
+                descripcion=safe_message(f"Creado Archivo Adjunto sin Archivo {adjunto.persona.nombre_completo}"),
                 url=url_for("personas_adjuntos.detail", persona_adjunto_id=adjunto.id),
             )
             bitacora.save()
@@ -157,7 +157,7 @@ def new_with_persona_id(persona_id):
                     bitacora = Bitacora(
                         modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                         usuario=current_user,
-                        descripcion=safe_message(f"Editado Archivo Adjunto {adjunto.id} - {adjunto.persona.nombre_completo}"),
+                        descripcion=safe_message(f"Subió GCS {adjunto.tipo} a {adjunto.persona.nombre_completo}"),
                         url=url_for("personas_adjuntos.detail", persona_adjunto_id=adjunto.id),
                     )
                     bitacora.save()
@@ -186,7 +186,7 @@ def edit(persona_adjunto_id):
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Editado Archivo Adjunto {adjunto.id} - {adjunto.persona.nombre_completo}"),
+                descripcion=safe_message(f"Editado Metadatos {adjunto.id} - {adjunto.persona.nombre_completo}"),
                 url=url_for("personas_adjuntos.detail", persona_adjunto_id=adjunto.id),
             )
             bitacora.save()
@@ -239,7 +239,7 @@ def edit(persona_adjunto_id):
                         modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                         usuario=current_user,
                         descripcion=safe_message(
-                            f"Editado Archivo Adjunto {adjunto_new.id}, se dio de baja {adjunto.id} - {adjunto.persona.nombre_completo}"
+                            f"Reemplazo GCS {adjunto_new.id}, se dio de baja {adjunto.id} - {adjunto.persona.nombre_completo}"
                         ),
                         url=url_for("personas_adjuntos.detail", persona_adjunto_id=adjunto_new.id),
                     )
@@ -266,7 +266,7 @@ def delete(persona_adjunto_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Eliminado Archivo Adjunto {adjunto.persona.nombre_completo}"),
+            descripcion=safe_message(f"Eliminado {adjunto.persona.nombre_completo}"),
             url=url_for("personas_adjuntos.detail", persona_adjunto_id=adjunto.id),
         )
         bitacora.save()
@@ -284,7 +284,7 @@ def recover(persona_adjunto_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Recuperado Archivo Adjunto {adjunto.persona.nombre_completo}"),
+            descripcion=safe_message(f"Recuperado {adjunto.persona.nombre_completo}"),
             url=url_for("personas_adjuntos.detail", persona_adjunto_id=adjunto.id),
         )
         bitacora.save()
