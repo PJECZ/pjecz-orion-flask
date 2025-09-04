@@ -234,7 +234,7 @@ def new():
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Nuevo Persana {persona.nombres}"),
+            descripcion=safe_message(f"Nuevo Persona {persona.nombre_completo}"),
             url=url_for("personas.detail", persona_id=persona.id),
         )
         bitacora.save()
@@ -292,7 +292,7 @@ def edit_domicilio_fiscal(persona_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Editado Domicilio Fiscal de una Persona {persona.nombre_completo}"),
+            descripcion=safe_message(f"Editado Domicilio Fiscal de {persona.nombre_completo}"),
             url=url_for("personas.detail", persona_id=persona.id),
         )
         bitacora.save()
@@ -325,7 +325,7 @@ def edit_datos_academicos(persona_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Editado Datos Académicos de una Persona {persona.nombre_completo}"),
+            descripcion=safe_message(f"Editado Datos Académicos de {persona.nombre_completo}"),
             url=url_for("personas.detail", persona_id=persona.id),
         )
         bitacora.save()
@@ -358,7 +358,7 @@ def edit_datos_personales(persona_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Editado Datos Personales de una Persona {persona.nombre_completo}"),
+            descripcion=safe_message(f"Editado Datos Personales de {persona.nombre_completo}"),
             url=url_for("personas.detail", persona_id=persona.id),
         )
         bitacora.save()
