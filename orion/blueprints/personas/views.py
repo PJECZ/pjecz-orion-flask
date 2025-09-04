@@ -234,7 +234,7 @@ def new():
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Nuevo Persona {persona.nombre_completo}"),
+            descripcion=safe_message(f"Nueva Persona {persona.nombre_completo}"),
             url=url_for("personas.detail", persona_id=persona.id),
         )
         bitacora.save()
