@@ -181,18 +181,26 @@ def new():
         # Validar CURP
         curp = None
         if form.curp.data != "":
-            curp = safe_curp(form.curp.data)
-            curp_repetida = Persona.query.filter_by(curp=curp).first()
-            if curp_repetida:
-                flash("Esta CURP ya se encuentra en uso.", "warning")
+            try:
+                curp = safe_curp(form.curp.data)
+                curp_repetida = Persona.query.filter_by(curp=curp).first()
+                if curp_repetida:
+                    flash("Esta CURP ya se encuentra en uso.", "warning")
+                    es_valido = False
+            except:
+                flash("CURP NO Válido", "warning")
                 es_valido = False
         # Validar RFC
         rfc = None
         if form.rfc.data != "":
-            rfc = safe_rfc(form.rfc.data)
-            rfc_repetida = Persona.query.filter_by(rfc=rfc).first()
-            if rfc_repetida:
-                flash("Esta RFC ya se encuentra en uso.", "warning")
+            try:
+                rfc = safe_rfc(form.rfc.data)
+                rfc_repetida = Persona.query.filter_by(rfc=rfc).first()
+                if rfc_repetida:
+                    flash("Esta RFC ya se encuentra en uso.", "warning")
+                    es_valido = False
+            except:
+                flash("RFC NO Válido", "warning")
                 es_valido = False
         # Validar Email
         email = None
@@ -399,24 +407,24 @@ def edit_datos_generales(persona_id):
         if form.rfc.data != None and form.rfc.data != "":
             try:
                 rfc = safe_rfc(form.rfc.data)
+                rfc_repetida = Persona.query.filter_by(rfc=rfc).filter(Persona.id != persona.id).first()
+                if rfc_repetida:
+                    flash("Esta RFC ya se encuentra en uso.", "warning")
+                    es_valido = False
             except:
                 flash("RFC no válido", "warning")
-                es_valido = False
-            rfc_repetida = Persona.query.filter_by(rfc=rfc).filter(Persona.id != persona.id).first()
-            if rfc_repetida:
-                flash("Esta RFC ya se encuentra en uso.", "warning")
                 es_valido = False
         # Validar CURP
         curp = None
         if form.curp.data != None and form.curp.data != "":
             try:
                 curp = safe_curp(form.curp.data)
+                curp_repetida = Persona.query.filter_by(curp=curp).filter(Persona.id != persona.id).first()
+                if curp_repetida:
+                    flash("Esta CURP ya se encuentra en uso.", "warning")
+                    es_valido = False
             except:
                 flash("CURP no válido", "warning")
-                es_valido = False
-            curp_repetida = Persona.query.filter_by(curp=curp).filter(Persona.id != persona.id).first()
-            if curp_repetida:
-                flash("Esta CURP ya se encuentra en uso.", "warning")
                 es_valido = False
         # Validar Email
         email = None
